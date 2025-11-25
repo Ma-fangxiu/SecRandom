@@ -9,9 +9,10 @@ from PySide6.QtGui import *
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 from PySide6.QtNetwork import *
-import loguru
 from qfluentwidgets import *
+
 from loguru import logger
+from loguru import logger as _logger
 
 from app.tools.variable import *
 from app.tools.path_utils import *
@@ -23,6 +24,7 @@ from app.tools.config import *
 # 全局窗口引用（延迟创建）
 main_window = None
 settings_window = None
+float_window = None
 
 # 全局变量，用于存储本地服务器实例
 local_server = None
@@ -35,40 +37,6 @@ if project_root not in sys.path:
 
 
 # ==================================================
-# 日志配置相关函数
-# ==================================================
-def configure_logging():
-    """配置日志系统"""
-    # 确保日志目录存在
-    log_dir = get_path(LOG_DIR)
-    log_dir.mkdir(exist_ok=True)
-
-    # 获取日志等级设置，默认为INFO
-    log_level = readme_settings("basic_settings", "log_level") if readme_settings("basic_settings", "log_level") else "INFO"
-
-    # 配置日志格式 - 文件输出（包含详细的调试信息）
-    logger.add(
-        log_dir / LOG_FILENAME_FORMAT,
-        rotation=LOG_ROTATION_SIZE,
-        retention=LOG_RETENTION_DAYS,
-        compression=LOG_COMPRESSION,
-        backtrace=True,
-        diagnose=True,
-        level=log_level,
-    )
-    
-    # 配置日志格式 - 终端输出
-    logger.add(
-        sys.stdout,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-        level=log_level,
-        colorize=True,
-    )
-    
-    logger.debug(f"日志系统已配置，当前日志等级: {log_level}")
-
-
-# ==================================================
 # 显示调节
 # ==================================================
 """根据设置自动调整DPI缩放模式"""
@@ -76,10 +44,10 @@ def configure_dpi_scale():
     """在创建QApplication之前配置DPI缩放模式"""
     # 先设置环境变量，这些必须在QApplication创建之前设置
     try:
-        from app.tools.settings_access import readme_settings
+        from app.tools.settings_access import readme_settings_async
         from app.Language.obtain_language import get_content_combo_name_async
 
-        dpiScale = readme_settings("basic_settings", "dpiScale")
+        dpiScale = readme_settings_async("basic_settings", "dpiScale")
         if dpiScale == "Auto":
             # 自动模式 - 使用PassThrough策略
             QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -174,7 +142,7 @@ def setup_local_server():
 # ==================================================
 def apply_font_settings():
     """应用字体设置 - 优化版本，使用字体管理器异步加载"""
-    font_family = readme_settings("basic_settings", "font")
+    font_family = readme_settings_async("basic_settings", "font")
 
     setFontFamilies([font_family])
     QTimer.singleShot(FONT_APPLY_DELAY, lambda: apply_font_to_application(font_family))
@@ -240,8 +208,6 @@ def update_widget_fonts(widget, font, font_family):
                         updated = True
         return updated
     except Exception as e:
-        from loguru import logger
-
         logger.exception("更新控件字体时发生异常: {}", e)
         return False
 
@@ -250,22 +216,35 @@ def start_main_window():
     """创建主窗口实例"""
     global main_window
     try:
-        # 延迟导入主窗口类，避免在模块导入阶段加载大量UI代码
         from app.view.main.window import MainWindow
 
-        main_window = MainWindow()
-        main_window.showSettingsRequested.connect(lambda: show_settings_window())
+        create_float_window()  # Ensure the global float window is created
+        main_window = MainWindow(float_window=float_window)
+        main_window.showSettingsRequested.connect(
+            lambda: show_settings_window()
+        )
         main_window.showSettingsRequestedAbout.connect(
             lambda: show_settings_window_about
         )
+        main_window.showFloatWindowRequested.connect(
+            show_float_window
+        )
         main_window.show()
+        
+        # 根据设置决定是否启动时显示浮窗
+        startup_display_float = readme_settings_async(
+            "floating_window_management", 
+            "startup_display_floating_window"
+        )
+        if startup_display_float:
+            show_float_window()
+            
         try:
             elapsed = time.perf_counter() - app_start_time
-            loguru.logger.debug(f"主窗口创建并显示完成，启动耗时: {elapsed:.3f}s")
+            logger.debug(f"主窗口创建并显示完成，启动耗时: {elapsed:.3f}s")
         except Exception as e:
-            from loguru import logger
 
-            logger.exception("Error calculating elapsed startup time (ignored): {}", e)
+            logger.exception("计算启动耗时出错（已忽略）: {}", e)
     except Exception as e:
         logger.error(f"创建主窗口失败: {e}", exc_info=True)
 
@@ -305,11 +284,33 @@ def show_settings_window_about():
         logger.error(f"显示关于窗口失败: {e}", exc_info=True)
 
 
+def create_float_window():
+    """创建浮动窗口实例"""
+    global float_window
+    try:
+        from app.view.floating_window.levitation import LevitationWindow
+
+        float_window = LevitationWindow()
+    except Exception as e:
+        logger.error(f"创建浮动窗口失败: {e}", exc_info=True)
+
+
+def show_float_window():
+    """显示浮动窗口"""
+    try:
+        global float_window
+        if float_window is None:
+            create_float_window()
+        if float_window is not None:
+            float_window.show()
+    except Exception as e:
+        logger.error(f"显示浮动窗口失败: {e}", exc_info=True)
+
 # ==================================================
 # 应用程序初始化相关函数
 # ==================================================
 def initialize_app():
-    """初始化应用程序，使用QTimer避免阻塞主线程，实现并行加载"""
+    """初始化应用程序"""
     program_dir = str(get_app_root())
 
     # 更改当前工作目录
@@ -317,7 +318,6 @@ def initialize_app():
         os.chdir(program_dir)
         logger.debug(f"工作目录已设置为: {program_dir}")
 
-    # 并行加载资源
     # 管理设置文件，确保其存在且完整
     manage_settings_file()
 
@@ -329,10 +329,10 @@ def initialize_app():
             (
                 lambda: (
                     setTheme(Theme.DARK)
-                    if readme_settings("basic_settings", "theme") == "DARK"
+                    if readme_settings_async("basic_settings", "theme") == "DARK"
                     else (
                         setTheme(Theme.AUTO)
-                        if readme_settings("basic_settings", "theme") == "AUTO"
+                        if readme_settings_async("basic_settings", "theme") == "AUTO"
                         else setTheme(Theme.LIGHT)
                     )
                 )
@@ -343,7 +343,7 @@ def initialize_app():
     # 加载主题颜色
     QTimer.singleShot(
         APP_INIT_DELAY,
-        lambda: (setThemeColor(readme_settings("basic_settings", "theme_color"))),
+        lambda: (setThemeColor(readme_settings_async("basic_settings", "theme_color"))),
     )
 
     # 清除重启记录
@@ -355,7 +355,7 @@ def initialize_app():
     # 应用字体设置
     QTimer.singleShot(APP_INIT_DELAY, lambda: (apply_font_settings()))
 
-    # 记录初始化完成时间（辅助诊断）
+    # 记录初始化完成时间
     logger.debug("应用初始化调度已启动，主窗口将在延迟后创建")
 
 
@@ -397,19 +397,21 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     import gc
+    gc.enable() # 开启垃圾回收器
 
-    gc.enable()
-
-    app.setQuitOnLastWindowClosed(APP_QUIT_ON_LAST_WINDOW_CLOSED)
+    try:
+        resident = readme_settings_async("basic_settings", "background_resident")
+        resident = True if resident is None else resident
+        app.setQuitOnLastWindowClosed(not resident)
+    except Exception:
+        app.setQuitOnLastWindowClosed(APP_QUIT_ON_LAST_WINDOW_CLOSED)
 
     # 解决Dialog和FluentWindow共存时的窗口拉伸问题
     app.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
 
     try:
-
         # 初始化应用程序
         main_async()
-
         app.exec()
 
         # 程序退出时释放共享内存
@@ -423,73 +425,19 @@ if __name__ == "__main__":
 
         sys.exit()
     except Exception as e:
-        print(f"应用程序启动失败: {e}")
-        try:
-            logger.error(f"应用程序启动失败: {e}", exc_info=True)
-        except Exception as log_e:
-            try:
-                from loguru import logger as _logger
+        logger.error(f"应用程序启动失败: {e}")
 
-                _logger.exception("Failed to log startup error: {}", log_e)
-            except Exception as inner_log_e:
-                try:
-                    from loguru import logger
-
-                    logger.exception("Failed to log logging failure: {}", inner_log_e)
-                except Exception as final_e:
-                    try:
-                        import sys
-
-                        print(
-                            f"Failed to log logging failure: {final_e}", file=sys.stderr
-                        )
-                    except Exception as e:
-                        try:
-                            import sys
-
-                            print(
-                                f"Failed to print logging failure: {e}", file=sys.stderr
-                            )
-                        except Exception as final_e:
-                            try:
-                                import sys
-
-                                print(
-                                    f"Final logging fallback failed: {final_e}",
-                                    file=sys.stderr,
-                                )
-                            except Exception as e:
-                                try:
-                                    import sys
-
-                                    print(
-                                        f"Final logging fallback failed to print: {e}",
-                                        file=sys.stderr,
-                                    )
-                                except Exception as eee:
-                                    try:
-                                        import sys
-
-                                        sys.stderr.write(
-                                            f"Final logging fallback failed to print: {eee}\n"
-                                        )
-                                    except Exception:
-                                        _ = None
         # 程序异常退出时释放共享内存
         try:
             shared_memory.detach()
         except Exception as detach_e:
-            from loguru import logger
-
             logger.exception(
-                "Error detaching shared memory during shutdown: {}", detach_e
+                "程序退出时分离共享内存失败: {}", detach_e
             )
         # 关闭本地服务器
         try:
             if local_server:
                 local_server.close()
         except Exception as close_e:
-            from loguru import logger
-
-            logger.exception("Error closing local server during shutdown: {}", close_e)
+            logger.exception("程序退出时关闭本地服务器失败: {}", close_e)
         sys.exit(1)

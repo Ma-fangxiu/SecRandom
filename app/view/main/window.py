@@ -17,8 +17,10 @@ from app.tools.path_utils import get_app_root
 from app.tools.personalised import get_theme_icon
 from app.Language.obtain_language import get_content_name_async
 from app.Language.obtain_language import readme_settings_async, update_settings
-from app.page_building.main_window_page import roll_call_page
+from app.common.safety.verify_ops import require_and_run
+from app.page_building.main_window_page import roll_call_page, lottery_page
 from app.view.tray.tray import Tray
+from app.view.floating_window.levitation import LevitationWindow
 
 
 # ==================================================
@@ -30,8 +32,9 @@ class MainWindow(MSFluentWindow):
 
     showSettingsRequested = Signal()
     showSettingsRequestedAbout = Signal()
+    showFloatWindowRequested = Signal()
 
-    def __init__(self):
+    def __init__(self, float_window: LevitationWindow):
         super().__init__()
         # 设置窗口对象名称，方便其他组件查找
         self.setObjectName("MainWindow")
@@ -60,11 +63,21 @@ class MainWindow(MSFluentWindow):
 
         # 导入并创建托盘图标
         self.tray_icon = Tray(self)
-        self.tray_icon.showSettingsRequested.connect(self.showSettingsRequested.emit)
+        self.tray_icon.showSettingsRequested.connect(
+            self.showSettingsRequested.emit
+        )
         self.tray_icon.showSettingsRequestedAbout.connect(
             self.showSettingsRequestedAbout.emit
         )
+        self.tray_icon.showFloatWindowRequested.connect(
+            self.showFloatWindowRequested.emit
+        )
         self.tray_icon.show_tray_icon()
+
+        self.float_window = float_window
+        self.showFloatWindowRequested.connect(self._toggle_float_window)
+        self.float_window.rollCallRequested.connect(lambda: self._show_and_switch_to(self.roll_call_page))
+        self.float_window.lotteryRequested.connect(lambda: self._show_and_switch_to(self.lottery_page))
 
         QTimer.singleShot(APP_INIT_DELAY, lambda: (self.createSubInterface()))
 
@@ -79,7 +92,7 @@ class MainWindow(MSFluentWindow):
             )
             self.resize(pre_maximized_width, pre_maximized_height)
             self._center_window()
-            QTimer.singleShot(100, self.showMaximized)
+            QTimer.singleShot(APP_INIT_DELAY, self.showMaximized)
         else:
             window_width = readme_settings_async("window", "width")
             window_height = readme_settings_async("window", "height")
@@ -113,6 +126,9 @@ class MainWindow(MSFluentWindow):
         self.roll_call_page = roll_call_page(self)
         self.roll_call_page.setObjectName("roll_call_page")
 
+        self.lottery_page = lottery_page(self)
+        self.lottery_page.setObjectName("lottery_page")
+
         self.settingsInterface = QWidget(self)
         self.settingsInterface.setObjectName("settingsInterface")
 
@@ -138,6 +154,23 @@ class MainWindow(MSFluentWindow):
             position=roll_call_position,
         )
 
+        # 获取奖池侧边栏位置设置
+        lottery_sidebar_pos = readme_settings_async(
+            "sidebar_management_window", "lottery_sidebar_position"
+        )
+        lottery_position = (
+            NavigationItemPosition.TOP
+            if (lottery_sidebar_pos is None or lottery_sidebar_pos != 1)
+            else NavigationItemPosition.BOTTOM
+        )
+
+        self.addSubInterface(
+            self.lottery_page,
+            get_theme_icon("ic_fluent_gift_20_filled"),
+            get_content_name_async("lottery", "title"),
+            position=lottery_position,
+        )
+
         # 获取设置图标位置设置
         settings_icon_pos = readme_settings_async(
             "sidebar_management_window", "settings_icon"
@@ -154,22 +187,41 @@ class MainWindow(MSFluentWindow):
             "设置",
             position=settings_position,
         )
-        settings_item.clicked.connect(lambda: self.showSettingsRequested.emit())
+        settings_item.clicked.connect(lambda: require_and_run("open_settings", self, self.showSettingsRequested.emit))
         settings_item.clicked.connect(lambda: self.switchTo(self.roll_call_page))
+
+    def _toggle_float_window(self):
+        if self.float_window.isVisible():
+            self.float_window.hide()
+        else:
+            self.float_window.show()
+
+    def _show_and_switch_to(self, page):
+        if self.isMinimized():
+            self.showNormal()
+        self.show()
+        self.activateWindow()
+        self.raise_()
+        self.switchTo(page)
 
     def closeEvent(self, event):
         """窗口关闭事件处理
-        拦截窗口关闭事件，隐藏窗口并保存窗口大小"""
-        self.hide()
-        event.ignore()
+        根据“后台驻留”设置决定是否真正关闭窗口"""
+        resident = readme_settings_async("basic_settings", "background_resident")
+        resident = True if resident is None else resident
+        if resident:
+            self.hide()
+            event.ignore()
 
-        # 保存当前窗口状态
-        is_maximized = self.isMaximized()
-        update_settings("window", "is_maximized", is_maximized)
-        if is_maximized:
-            pass
+            # 保存当前窗口状态
+            is_maximized = self.isMaximized()
+            update_settings("window", "is_maximized", is_maximized)
+            if is_maximized:
+                pass
+            else:
+                self.save_window_size(self.width(), self.height())
         else:
-            self.save_window_size(self.width(), self.height())
+            event.accept()
 
     def resizeEvent(self, event):
         """窗口大小变化事件处理
@@ -284,8 +336,3 @@ class MainWindow(MSFluentWindow):
         # 完全退出当前应用程序
         QApplication.quit()
         sys.exit(0)
-
-    def show_about_tab(self):
-        """显示关于页面
-        打开设置窗口并导航到关于页面"""
-        self.showSettingsRequestedAbout.emit()

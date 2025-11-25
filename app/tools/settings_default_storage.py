@@ -1,3 +1,4 @@
+from turtle import Turtle
 from app.tools.variable import *
 
 # ==================================================
@@ -21,14 +22,16 @@ DEFAULT_SETTINGS = {
     "float_position": {
         "height": {"default_value": "screen_height_half"},
         "width": {"default_value": "screen_width_half"},
+        "x": {"default_value": 100},
+        "y": {"default_value": 100},
     },
-    "home": {"title": {"default_value": None}},
     "basic_settings": {
         "title": {"default_value": None},
         "basic_function": {"default_value": None},
         "data_management": {"default_value": None},
         "personalised": {"default_value": None},
         "autostart": {"default_value": False},
+        "background_resident": {"default_value": True},
         "export_diagnostic_data": {"default_value": None},
         "export_settings": {"default_value": None},
         "import_settings": {"default_value": None},
@@ -332,6 +335,11 @@ DEFAULT_SETTINGS = {
         "show_hide_floating_window_switch": {"default_value": False},
         "restart_switch": {"default_value": False},
         "exit_switch": {"default_value": False},
+        "open_settings_switch": {"default_value": True},
+        "diagnostic_export_switch": {"default_value": True},
+        "data_export_switch": {"default_value": True},
+        "import_overwrite_switch": {"default_value": True},
+        "import_version_mismatch_switch": {"default_value": False},
     },
     "advanced_safety_settings": {
         "title": {"default_value": None},
@@ -362,6 +370,9 @@ DEFAULT_SETTINGS = {
         "lottery_quantity_control": {"default_value": True},
         "lottery_start_button": {"default_value": True},
         "lottery_list": {"default_value": True},
+        "lottery_roll_call_list": {"default_value": True},
+        "lottery_roll_call_range": {"default_value": True},
+        "lottery_roll_call_gender": {"default_value": True},
         "lottery_remaining_button": {"default_value": True},
         "lottery_quantity_label": {"default_value": True},
         "custom_method": {"default_value": 1},
@@ -388,6 +399,7 @@ DEFAULT_SETTINGS = {
         "floating_window_display_style": {"default_value": 0},
         "floating_window_stick_to_edge": {"default_value": True},
         "floating_window_stick_to_edge_recover_seconds": {"default_value": 5},
+        "floating_window_long_press_duration": {"default_value": 500},
         "floating_window_stick_to_edge_display_style": {"default_value": 1},
     },
     "sidebar_tray_management": {"title": {"default_value": None}},
@@ -401,7 +413,6 @@ DEFAULT_SETTINGS = {
     },
     "sidebar_management_settings": {
         "title": {"default_value": None},
-        "home": {"default_value": 0},
         "base_settings": {"default_value": 0},
         "name_management": {"default_value": 0},
         "draw_settings": {"default_value": 0},
@@ -443,6 +454,7 @@ DEFAULT_SETTINGS = {
         "lottery_history": {"default_value": None},
         "show_roll_call_history": {"default_value": True},
         "select_class_name": {"default_value": 0},
+        "select_weight": {"default_value": False},
         "clear_roll_call_history": {"default_value": None},
         "show_lottery_history": {"default_value": True},
         "select_pool_name": {"default_value": 0},
@@ -456,7 +468,14 @@ DEFAULT_SETTINGS = {
         "HeaderLabels_all_weight": {"default_value": None},
         "HeaderLabels_time": {"default_value": None},
         "HeaderLabels_Individual": {"default_value": None},
-        "select_weight": {"default_value": False},
+    },
+    "lottery_history_table": {
+        "title": {"default_value": None},
+        "select_pool_name": {"default_value": 0},
+        "select_mode": {"default_value": None},
+        "HeaderLabels_all_weight": {"default_value": None},
+        "HeaderLabels_time": {"default_value": None},
+        "HeaderLabels_Individual": {"default_value": None},
     },
     "more_settings": {
         "title": {"default_value": None},
@@ -485,9 +504,7 @@ DEFAULT_SETTINGS = {
         "bilibili": {"default_value": None},
         "contributor": {"default_value": None},
         "donation": {"default_value": None},
-        "check_update": {"default_value": None},
         "website": {"default_value": None},
-        "channel": {"default_value": 0},
         "copyright": {"default_value": None},
         "version": {"default_value": None},
     },

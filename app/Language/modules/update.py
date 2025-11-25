@@ -1,7 +1,7 @@
 # 更新页面语言配置
 update = {
     "ZH_CN": {
-        "title": {"name": "检查更新", "description": "检查并安装软件更新"},
+        "title": {"name": "更新", "description": "检查并安装软件更新"},
         "secrandom_update_text": {"name": "SecRandom 更新"},
         "check_update": {"name": "检查更新"},
         "latest_version": {"name": "已是最新版本"},
@@ -12,7 +12,7 @@ update = {
         "checking_update": {"name": "正在检查更新..."},
         "update_method": {
             "name": "更新方式",
-            "description": "配置软件的自动更新行为",
+            "description": "配置软件自动更新行为",
             "combo_items": [
                 "禁用自动更新",
                 "仅显示更新通知",
@@ -24,7 +24,7 @@ update = {
         },
         "update_channel": {
             "name": "更新通道选择",
-            "description": "选择软件更新的发布通道",
+            "description": "选择软件更新发布通道",
             "combo_items": [
                 "正式版",
                 "测试版"
@@ -32,7 +32,7 @@ update = {
         },
         "update_source": {
             "name": "更新源选择",
-            "description": "选择软件更新的下载来源",
+            "description": "选择软件更新下载来源",
             "combo_items": [
                 "GitHub"
             ]

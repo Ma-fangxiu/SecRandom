@@ -2,7 +2,7 @@
 # 导入库
 # ==================================================
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication
 from PySide6.QtGui import QFontDatabase
 from qfluentwidgets import (
     GroupHeaderCardWidget,
@@ -26,7 +26,7 @@ from app.Language.obtain_language import (
     get_content_pushbutton_name_async,
     get_content_switchbutton_name_async,
 )
-from app.tools.config import export_diagnostic_data, export_settings, import_settings, export_all_data, import_all_data
+from app.tools.config import export_diagnostic_data, export_settings, import_settings, export_all_data, import_all_data, configure_logging, set_autostart, show_notification, NotificationType, NotificationConfig
 
 
 # ==================================================
@@ -72,11 +72,23 @@ class basic_settings_function(GroupHeaderCardWidget):
         self.autostart_switch.setChecked(
             readme_settings_async("basic_settings", "autostart")
         )
-        self.autostart_switch.checkedChanged.connect(
-            lambda: update_settings(
-                "basic_settings", "autostart", self.autostart_switch.isChecked()
+        self.autostart_switch.checkedChanged.connect(self.__on_autostart_changed)
+
+        # 后台驻留设置
+        self.resident_switch = SwitchButton()
+        self.resident_switch.setOffText(
+            get_content_switchbutton_name_async(
+                "basic_settings", "background_resident", "disable"
             )
         )
+        self.resident_switch.setOnText(
+            get_content_switchbutton_name_async(
+                "basic_settings", "background_resident", "enable"
+            )
+        )
+        _resident = readme_settings_async("basic_settings", "background_resident")
+        self.resident_switch.setChecked(True if _resident is None else _resident)
+        self.resident_switch.checkedChanged.connect(self.__on_resident_changed)
 
         # 添加设置项到分组
         self.addGroup(
@@ -85,7 +97,71 @@ class basic_settings_function(GroupHeaderCardWidget):
             get_content_description_async("basic_settings", "autostart"),
             self.autostart_switch,
         )
+        self.addGroup(
+            get_theme_icon("ic_fluent_resize_20_filled"),
+            get_content_name_async("basic_settings", "background_resident"),
+            get_content_description_async("basic_settings", "background_resident"),
+            self.resident_switch,
+        )
 
+    def __on_autostart_changed(self, checked):
+        update_settings("basic_settings", "autostart", checked)
+        ok = set_autostart(checked)
+        if ok:
+            if checked:
+                show_notification(
+                    NotificationType.SUCCESS,
+                    NotificationConfig(
+                        title=get_content_name_async("basic_settings", "autostart"),
+                        content="已开启开机自启",
+                    ),
+                    parent=self.window(),
+                )
+            else:
+                show_notification(
+                    NotificationType.INFO,
+                    NotificationConfig(
+                        title=get_content_name_async("basic_settings", "autostart"),
+                        content="已关闭开机自启",
+                    ),
+                    parent=self.window(),
+                )
+        else:
+            show_notification(
+                NotificationType.ERROR,
+                NotificationConfig(
+                    title=get_content_name_async("basic_settings", "autostart"),
+                    content="设置开机自启失败",
+                ),
+                parent=self.window(),
+            )
+
+    def __on_resident_changed(self, checked):
+        update_settings("basic_settings", "background_resident", checked)
+        try:
+            app = QApplication.instance()
+            if app:
+                app.setQuitOnLastWindowClosed(not checked)
+        except Exception:
+            pass
+        if checked:
+            show_notification(
+                NotificationType.SUCCESS,
+                NotificationConfig(
+                    title=get_content_name_async("basic_settings", "background_resident"),
+                    content="已开启后台驻留",
+                ),
+                parent=self.window(),
+            )
+        else:
+            show_notification(
+                NotificationType.INFO,
+                NotificationConfig(
+                    title=get_content_name_async("basic_settings", "background_resident"),
+                    content="已关闭后台驻留",
+                ),
+                parent=self.window(),
+            )
 
 class basic_settings_personalised(GroupHeaderCardWidget):
     def __init__(self, parent=None):
@@ -166,6 +242,7 @@ class basic_settings_personalised(GroupHeaderCardWidget):
         self.logLevel.currentTextChanged.connect(
             lambda level: update_settings("basic_settings", "log_level", level)
         )
+        self.logLevel.currentTextChanged.connect(lambda: configure_logging())
 
         # 主题色设置卡片
         self.themeColorCard = ColorSettingCard(

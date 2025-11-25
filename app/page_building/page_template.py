@@ -33,8 +33,7 @@ class PageTemplate(QFrame):
         self.content_widget_class = content_widget_class
 
         self.__connectSignalToSlot()
-
-        QTimer.singleShot(0, self.create_ui_components)
+        self.create_ui_components()
 
     def __connectSignalToSlot(self):
         qconfig.themeChanged.connect(setTheme)
@@ -75,7 +74,7 @@ class PageTemplate(QFrame):
         self.ui_created = True
 
         if self.content_widget_class:
-            QTimer.singleShot(0, self.create_content)
+            self.create_content()
 
     def create_content(self):
         """后台创建内容组件，避免堵塞进程"""
@@ -253,7 +252,7 @@ class PivotPageTemplate(QFrame):
         """
         if not self.ui_created:
             # 如果UI尚未创建，延迟添加
-            QTimer.singleShot(100, lambda: self.add_page(page_name, display_name))
+            QTimer.singleShot(APP_INIT_DELAY, lambda: self.add_page(page_name, display_name))
             return
 
         # 创建滑动区域
@@ -344,9 +343,10 @@ class PivotPageTemplate(QFrame):
             # 添加实际内容到内部布局
             inner_layout.addWidget(widget)
 
-            # 标记为已加载
+            # 标记为已加载并保存组件引用
             if page_name in self.page_infos:
                 self.page_infos[page_name]["loaded"] = True
+                self.page_infos[page_name]["widget"] = widget
 
             elapsed = time.perf_counter() - start
             logger.debug(f"加载页面组件 {page_name} 耗时: {elapsed:.3f}s")
@@ -447,7 +447,7 @@ class PivotPageTemplate(QFrame):
         except Exception as e:
             from loguru import logger
 
-            logger.exception("Error scheduling batch page loads (ignored): {}", e)
+            logger.exception("调度批量页面加载时出错（已忽略）: {}", e)
 
     def on_current_index_changed(self, index: int):
         """堆叠窗口索引改变时的处理"""
