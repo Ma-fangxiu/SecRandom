@@ -75,6 +75,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon="resources/secrandom-icon-paper.ico",
 )
 
 # 创建目录模式输出
