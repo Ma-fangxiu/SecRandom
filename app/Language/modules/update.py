@@ -1,7 +1,7 @@
 # 更新页面语言配置
 update = {
     "ZH_CN": {
-        "title": {"name": "更新", "description": "检查并安装软件更新"},
+        "title": {"name": "更新设置", "description": "检查并安装软件更新"},
         "secrandom_update_text": {"name": "SecRandom 更新"},
         "check_update": {"name": "检查更新"},
         "latest_version": {"name": "已是最新版本"},
@@ -16,20 +16,15 @@ update = {
         "last_check_time": {"name": "上次检查更新时间"},
         "download_and_install": {"name": "下载并安装"},
         "download_in_progress": {"name": "下载和安装功能正在开发中..."},
-        "auto_download": {
-            "name": "自动下载更新",
-            "description": "是否自动下载更新包",
-            "switchbutton_name": {"enable": "", "disable": ""},
-        },
-        "auto_update": {
-            "name": "自动安装更新",
-            "description": "是否在下载完成后自动安装更新",
-            "switchbutton_name": {"enable": "", "disable": ""},
-        },
-        "need_notification": {
-            "name": "更新通知",
-            "description": "是否在发现新版本时显示通知",
-            "switchbutton_name": {"enable": "", "disable": ""},
+        "auto_update_mode": {
+            "name": "自动检查更新并安装",
+            "description": "设置应用的自动更新模式",
+            "combo_items": [
+                "从不自动更新",
+                "自动检查更新并通知",
+                "自动检查更新并下载",
+                "自动检查更新并安装",
+            ],
         },
         "update_channel": {
             "name": "更新通道选择",

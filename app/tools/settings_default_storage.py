@@ -503,11 +503,9 @@ DEFAULT_SETTINGS = {
     "debug": {"title": {"default_value": None}},
     "update": {
         "title": {"default_value": None},
-        "auto_download": {"default_value": True},
-        "auto_update": {"default_value": False},
-        "need_notification": {"default_value": True},
+        "auto_update_mode": {"default_value": 3},
         "update_channel": {"default_value": 0},
-        "update_source": {"default_value": 0},
+        "update_source": {"default_value": 1},
         "last_check_time": {"default_value": "1970-01-01 08:00:00"},
     },
     "about": {

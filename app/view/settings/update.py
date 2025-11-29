@@ -131,53 +131,17 @@ class update(QWidget):
         self.update_settings_card.setTitle(get_content_name_async("update", "title"))
         self.update_settings_card.setBorderRadius(8)
 
-        # 自动下载更新开关
-        self.auto_download_switch = SwitchButton()
-        self.auto_download_switch.setOffText(
-            get_content_switchbutton_name_async("update", "auto_download", "disable")
+        # 自动更新模式下拉框
+        self.auto_update_combo = ComboBox()
+        self.auto_update_combo.addItems(
+            get_content_combo_name_async("update", "auto_update_mode")
         )
-        self.auto_download_switch.setOnText(
-            get_content_switchbutton_name_async("update", "auto_download", "enable")
+        self.auto_update_combo.setCurrentIndex(
+            readme_settings_async("update", "auto_update_mode")
         )
-        auto_download = readme_settings("update", "auto_download")
-        self.auto_download_switch.setChecked(auto_download)
-        self.auto_download_switch.checkedChanged.connect(
+        self.auto_update_combo.currentIndexChanged.connect(
             lambda: update_settings(
-                "update", "auto_download", self.auto_download_switch.isChecked()
-            )
-        )
-
-        # 自动安装更新开关
-        self.auto_update_switch = SwitchButton()
-        self.auto_update_switch.setOffText(
-            get_content_switchbutton_name_async("update", "auto_update", "disable")
-        )
-        self.auto_update_switch.setOnText(
-            get_content_switchbutton_name_async("update", "auto_update", "enable")
-        )
-        auto_update = readme_settings("update", "auto_update")
-        self.auto_update_switch.setChecked(auto_update)
-        self.auto_update_switch.checkedChanged.connect(
-            lambda: update_settings(
-                "update", "auto_update", self.auto_update_switch.isChecked()
-            )
-        )
-
-        # 更新通知开关
-        self.need_notification_switch = SwitchButton()
-        self.need_notification_switch.setOffText(
-            get_content_switchbutton_name_async(
-                "update", "need_notification", "disable"
-            )
-        )
-        self.need_notification_switch.setOnText(
-            get_content_switchbutton_name_async("update", "need_notification", "enable")
-        )
-        need_notification = readme_settings("update", "need_notification")
-        self.need_notification_switch.setChecked(need_notification)
-        self.need_notification_switch.checkedChanged.connect(
-            lambda: update_settings(
-                "update", "need_notification", self.need_notification_switch.isChecked()
+                "update", "auto_update_mode", self.auto_update_combo.currentIndex()
             )
         )
 
@@ -209,24 +173,10 @@ class update(QWidget):
 
         # 添加设置项到卡片
         self.update_settings_card.addGroup(
-            get_theme_icon("ic_fluent_database_arrow_down_20_filled"),
-            get_content_name_async("update", "auto_download"),
-            get_content_description_async("update", "auto_download"),
-            self.auto_download_switch,
-        )
-
-        self.update_settings_card.addGroup(
             get_theme_icon("ic_fluent_arrow_repeat_all_20_filled"),
-            get_content_name_async("update", "auto_update"),
-            get_content_description_async("update", "auto_update"),
-            self.auto_update_switch,
-        )
-
-        self.update_settings_card.addGroup(
-            get_theme_icon("ic_fluent_comment_note_20_filled"),
-            get_content_name_async("update", "need_notification"),
-            get_content_description_async("update", "need_notification"),
-            self.need_notification_switch,
+            get_content_name_async("update", "auto_update_mode"),
+            get_content_description_async("update", "auto_update_mode"),
+            self.auto_update_combo,
         )
 
         self.update_settings_card.addGroup(
@@ -327,8 +277,6 @@ class update(QWidget):
         """下载并安装更新"""
         # 这里可以添加下载和安装更新的逻辑
         # 暂时显示一个消息框，提示功能正在开发中
-        from qfluentwidgets import MessageBox
-
         msg_box = MessageBox(
             get_content_name_async("update", "download_and_install"),
             get_content_name_async("update", "download_in_progress"),
