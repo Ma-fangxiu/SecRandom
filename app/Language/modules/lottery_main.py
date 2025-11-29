@@ -17,6 +17,10 @@ lottery = {
             "description": "停止抽奖",
             "pushbutton_name": "停止",
         },
+        "default_empty_item": {
+            "name": "无名单",
+            "description": "无名单时的默认选项",
+        },
         "list_combobox": {
             "name": "班级",
             "description": "选择班级",

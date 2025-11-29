@@ -17,6 +17,10 @@ roll_call = {
             "description": "停止点名",
             "pushbutton_name": "停止",
         },
+        "default_empty_item": {
+            "name": "无名单",
+            "description": "无名单时的默认选项",
+        },
         "range_combobox": {
             "name": "范围",
             "description": "选择抽取范围",

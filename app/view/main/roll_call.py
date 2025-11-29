@@ -156,6 +156,9 @@ class roll_call(QWidget):
         self.list_combobox = ComboBox()
         self._set_widget_font(self.list_combobox, 12)
         self.list_combobox.setFixedSize(165, 45)
+        self.list_combobox.setPlaceholderText(
+            get_content_name_async("roll_call", "default_empty_item")
+        )
         # 延迟填充班级列表，避免启动时进行文件IO
         self.list_combobox.currentTextChanged.connect(self.on_class_changed)
 

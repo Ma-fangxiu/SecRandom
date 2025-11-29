@@ -156,6 +156,9 @@ class Lottery(QWidget):
         self.pool_list_combobox = ComboBox()
         self._set_widget_font(self.pool_list_combobox, 12)
         self.pool_list_combobox.setFixedSize(165, 45)
+        self.pool_list_combobox.setPlaceholderText(
+            get_content_name_async("lottery", "default_empty_item")
+        )
         # 延迟填充奖池列表，避免启动时进行文件IO
         self.pool_list_combobox.currentTextChanged.connect(self.on_pool_changed)
 
