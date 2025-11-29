@@ -156,6 +156,10 @@ If you find SecRandom helpful, you're welcome to support our development work!
 - 📄 **[SecRandom Official Documentation](https://secrandom.netlify.app)**
 - [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SECTL/SecRandom)
 
+## 📖 GitHub Contribution Tutorial
+
+Translation of the Contribution Tutorial for English (US) is still in progress, you can first read the Simplified Chinese version of the Contribution Tutorial: [Contribution Tutorial](../CONTRIBUTING.md)
+
 ## ✨ Star History
 
 <picture>
@@ -163,125 +167,5 @@ If you find SecRandom helpful, you're welcome to support our development work!
   <img alt="Star History" src="https://api.star-history.com/svg?repos=SECTL/SecRandom&type=Date">
 </picture>
 
-## 📖 GitHub Contribution Tutorial
-
-<details>
-<summary>Click to view details</summary>
-
-### 🚀 Quick Start
-
-Before contributing code to the SecRandom project, please ensure you have completed the following preparations:
-
-1. **Fork the Project**
-   - Visit [SecRandom GitHub Repository](https://github.com/SECTL/SecRandom)
-   - Click the "Fork" button in the upper right corner to create your own repository copy
-
-2. **Clone the Repository**
-   ```bash
-   git clone https://github.com/YourUsername/SecRandom.git
-   cd SecRandom
-   ```
-
-3. **Add Upstream Repository**
-   ```bash
-   git remote add upstream https://github.com/SECTL/SecRandom.git
-   ```
-
-### 📤 Submit Your Contribution
-
-1. **Create a Feature Branch**
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-2. **Make Changes**
-   - Write your code
-   - Add necessary comments (please use Chinese)
-   - Ensure following the project's code standards
-
-3. **Commit Changes**
-   ```bash
-   git add .
-   git commit -m "Describe your changes"
-   ```
-
-4. **Sync Upstream Changes**
-   ```bash
-   git fetch upstream
-   git rebase upstream/master
-   ```
-
-5. **Push and Create Pull Request**
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-   - Visit your GitHub repository
-   - Click the "Compare & pull request" button
-   - Fill in the PR description and submit
-
-### 📋 Contribution Guidelines
-
-#### Code Standards
-- Use Chinese for code comments
-- Follow the project's existing code style
-- Ensure all used Qt classes are imported
-- Verify third-party UI components exist
-
-#### Commit Message Standards
-- Use clear, concise commit messages
-- Start with a verb (e.g., Add, Fix, Update, etc.)
-- Avoid overly simple descriptions (e.g., "fix bug")
-
-#### Pull Request Requirements
-- PR title should clearly and concisely describe the changes
-- Provide detailed change descriptions
-- Ensure all tests pass
-- Link related Issues (if any)
-
-</details>
-
-## 📖 Usage Tutorial
-
-### 🚀 GitHub Actions Unified Build Workflow Usage Guide
-
-The SecRandom project uses a unified GitHub Actions workflow for building and publishing, located at `.github/workflows/build-unified.yml`. This workflow supports multiple trigger methods and configuration options.
-
-<details>
-<summary>View more information</summary>
-
-#### Triggering Specific Builds Through Commit Messages
-
-You can trigger different build behaviors by including specific keywords in your git commit message:
-
-1. **Trigger Package Build**
-   - Include the `打包` (package) keyword in the commit message
-   - For example: `git commit -m "New feature 打包"`
-
-2. **Specify Build Platform**
-   - `win` - Windows platform
-   - `linux` - Linux platform
-   - `all` - All platforms
-   - For example: `git commit -m "Fix bug 打包 linux"`
-
-3. **Trigger All Platform Builds**
-   - Create a tag that follows version number format (format: `v数字.数字.数字.数字`)
-   - For example: `git tag v1.2.3.4 && git push origin v1.2.3.4`
-
-#### Build Parameter Keyword Description
-
-The commit message can contain the following keywords to control build behavior:
-
-| Keyword | Meaning | Example |
-|---------|--------|--------|
-| `打包` | General package trigger | `git commit -m "New feature 打包"` |
-| `win` | Windows platform | `git commit -m "Fix UI 打包 win"` |
-| `linux` | Linux platform | `git commit -m "Optimize performance 打包 linux"` |
-| `all` | All platforms | `git commit -m "Major update 打包 all"` |
-
-**Combination Usage Examples:**
-- `git commit -m "Optimize performance 打包 pi"` - Use PyInstaller to build Windows platform
-- `git commit -m "Fix bug 打包 pi"` - Use PyInstaller to build Linux platform
-
-</details>
 
 **Copyright © 2025 SECTL**
