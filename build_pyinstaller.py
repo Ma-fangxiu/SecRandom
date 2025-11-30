@@ -22,6 +22,13 @@ from packaging_utils import (
     normalize_hidden_imports,
 )
 
+# 导入项目配置信息
+sys.path.insert(0, str(Path(__file__).parent))
+from app.tools.variable import APPLY_NAME, VERSION, APP_DESCRIPTION, AUTHOR, WEBSITE
+
+# 导入deb包构建工具
+from packaging_utils_deb import DebBuilder
+
 # 获取项目根目录
 PROJECT_ROOT = Path(__file__).parent
 SPEC_FILE = PROJECT_ROOT / "Secrandom.spec"
@@ -43,6 +50,32 @@ def _print_packaging_summary() -> None:
     print("\nHidden imports ({} modules):".format(len(hidden_imports)))
     for name in hidden_imports:
         print(f"  - {name}")
+
+
+def build_deb() -> None:
+    """构建deb包"""
+    if sys.platform != "linux":
+        return
+
+    print("\n" + "=" * 60)
+    print("开始构建deb包...")
+    print("=" * 60)
+
+    try:
+        # 使用DebBuilder构建deb包
+        DebBuilder.build_from_pyinstaller(
+            project_root=PROJECT_ROOT,
+            app_name=APPLY_NAME,
+            version=VERSION,
+            description=APP_DESCRIPTION,
+            author=AUTHOR,
+            website=WEBSITE,
+        )
+        print("=" * 60)
+
+    except Exception as e:
+        print(f"构建deb包失败: {e}")
+        sys.exit(1)
 
 
 def main():
@@ -76,9 +109,12 @@ def main():
             encoding="utf-8",
         )
         print("\n" + "=" * 60)
-        print("打包成功！")
-        print("可执行文件位于: dist/SecRandom.exe")
+        print("PyInstaller打包成功！")
         print("=" * 60)
+
+        # 构建deb包（仅在Linux平台）
+        build_deb()
+
     except subprocess.CalledProcessError as e:
         print("\n" + "=" * 60)
         print(f"打包失败: {e}")
@@ -87,6 +123,14 @@ def main():
             print(f"标准输出:\n{e.stdout}")
         if e.stderr:
             print(f"错误输出:\n{e.stderr}")
+        print("=" * 60)
+        sys.exit(1)
+    except Exception as e:
+        print("\n" + "=" * 60)
+        print(f"发生意外错误: {e}")
+        import traceback
+
+        traceback.print_exc()
         print("=" * 60)
         sys.exit(1)
 

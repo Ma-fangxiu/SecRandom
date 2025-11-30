@@ -100,7 +100,8 @@ jobs:
             libxcb-keysyms1 \
             libxcb-randr0 \
             libxcb-render-util0 \
-            libxcb-shape0
+            libxcb-shape0 \
+            dpkg-dev
           echo "Linux系统依赖安装完成"
         timeout-minutes: 10
 
@@ -185,39 +186,26 @@ jobs:
         run: |
           echo "开始 Linux 打包操作..."
 
-          # 检查构建是否成功
-          if [ ! -d "dist/SecRandom" ]; then
-            echo "错误：dist/SecRandom 目录不存在，构建可能失败了"
-            echo "可用的dist目录内容："
-            if [ -d "dist" ]; then
-              ls -la dist/
-            else
-              echo "dist 目录不存在"
-            fi
+          # 检查构建输出是否存在
+          if [ ! -d "dist" ]; then
+            echo "错误：dist 目录不存在，构建可能失败了"
             exit 1
           fi
 
-          # 创建zip_dist/SecRandom目录
-          mkdir -p zip_dist/SecRandom
+          # 列出dist目录内容，用于调试
+          echo "dist目录内容："
+          ls -la dist/
 
-          # 复制dist/SecRandom目录内容
-          cp -r dist/SecRandom/* zip_dist/SecRandom/
+          # deb包构建已经在build_pyinstaller.py或build_nuitka.py中完成
+          # 检查deb包是否生成
+          if [ ! -f "zip/*.deb" ]; then
+            echo "错误：deb包未生成，构建可能失败了"
+            echo "zip目录内容："
+            ls -la zip/
+            exit 1
+          fi
 
-          # 创建app目录
-          mkdir -p zip_dist/SecRandom/app
-
-          # 复制app/resources文件夹到zip_dist/SecRandom目录下
-          cp -r app/resources zip_dist/SecRandom/app/
-
-          # 复制 LICENSE 文件到zip_dist/SecRandom目录下
-          cp LICENSE zip_dist/SecRandom/
-
-          # 使用 zip 压缩文件
-          mkdir -p zip
-          cd zip_dist
-          zip -r ../zip/SecRandom-${{ matrix.platform }}-${{ github.ref_name }}-${{ matrix.arch }}-${{ matrix.pack_mode }}.zip SecRandom/
-          cd ..
-          echo "目录模式打包完成: zip/SecRandom-${{ matrix.platform }}-${{ github.ref_name }}-${{ matrix.arch }}-${{ matrix.pack_mode }}.zip"
+          echo "deb包构建完成，位于zip目录下"
 
       - name: 上传应用程序
         if: github.event_name != 'pull_request'

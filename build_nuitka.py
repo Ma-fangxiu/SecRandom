@@ -24,6 +24,12 @@ from packaging_utils import (
     normalize_hidden_imports,
 )
 
+# 导入项目配置信息
+from app.tools.variable import APPLY_NAME, VERSION, APP_DESCRIPTION, AUTHOR, WEBSITE
+
+# 导入deb包构建工具
+from packaging_utils_deb import DebBuilder
+
 
 PACKAGE_INCLUDE_NAMES = {
     "app.Language.modules",
@@ -37,7 +43,7 @@ def _read_version() -> str:
     try:
         return VERSION_FILE.read_text(encoding="utf-8").strip()
     except FileNotFoundError:
-        return "0.0.0.0"
+        return "0.0.0"
 
 
 def _print_packaging_summary() -> None:
@@ -108,8 +114,6 @@ def get_nuitka_command():
         "--onefile",
         "--enable-plugin=pyside6",
         "--assume-yes-for-downloads",
-        # 使用 MinGW64 编译器
-        "--mingw64",
         # 输出目录
         "--output-dir=dist",
         # 应用程序信息
@@ -123,12 +127,23 @@ def get_nuitka_command():
         "--no-deployment-flag=self-execution",
     ]
 
+    # 根据平台添加特定参数
+    if sys.platform == "win32":
+        # Windows 特定参数
+        cmd.append("--mingw64")  # 使用 MinGW64 编译器
+    else:
+        # Linux 特定参数
+        cmd.append("--linux-onefile-icon")
+
     cmd.extend(_gather_data_flags())
     cmd.extend(package_flags)
     cmd.extend(module_flags)
 
-    if ICON_FILE.exists():
+    # 根据平台添加图标参数
+    if sys.platform == "win32" and ICON_FILE.exists():
         cmd.append(f"--windows-icon-from-ico={ICON_FILE}")
+    elif sys.platform == "linux" and ICON_FILE.exists():
+        cmd.append(f"--linux-icon={ICON_FILE}")
 
     # 主入口文件
     cmd.append("main.py")
@@ -180,16 +195,46 @@ def check_mingw64():
     return response.lower() == "y"
 
 
+def build_deb() -> None:
+    """构建deb包（适用于Nuitka单文件输出）"""
+    if sys.platform != "linux":
+        return
+
+    print("\n" + "=" * 60)
+    print("开始构建deb包...")
+    print("=" * 60)
+
+    try:
+        # 使用DebBuilder构建deb包
+        DebBuilder.build_from_nuitka(
+            project_root=PROJECT_ROOT,
+            app_name=APPLY_NAME,
+            version=VERSION,
+            description=APP_DESCRIPTION,
+            author=AUTHOR,
+            website=WEBSITE,
+        )
+        print("=" * 60)
+
+    except Exception as e:
+        print(f"构建deb包失败: {e}")
+        sys.exit(1)
+
+
 def main():
     """执行打包"""
     print("=" * 60)
-    print("开始使用 Nuitka + MinGW64 + uv 打包 SecRandom")
+    if sys.platform == "win32":
+        print("开始使用 Nuitka + MinGW64 + uv 打包 SecRandom")
+    else:
+        print("开始使用 Nuitka + uv 打包 SecRandom")
     print("=" * 60)
 
-    # 检查 MinGW64
-    if not check_mingw64():
-        print("\n取消打包")
-        sys.exit(1)
+    # 检查 MinGW64（仅在Windows平台）
+    if sys.platform == "win32":
+        if not check_mingw64():
+            print("\n取消打包")
+            sys.exit(1)
 
     _print_packaging_summary()
 
@@ -212,8 +257,12 @@ def main():
             encoding="utf-8",
         )
         print("\n" + "=" * 60)
-        print("打包成功！")
+        print("Nuitka打包成功！")
         print("=" * 60)
+
+        # 构建deb包（仅在Linux平台）
+        build_deb()
+
     except subprocess.CalledProcessError as e:
         print("\n" + "=" * 60)
         print(f"打包失败: {e}")
