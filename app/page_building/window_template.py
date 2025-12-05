@@ -111,7 +111,7 @@ class SimpleWindowTemplate(FramelessWindow):
         self.setMinimumSize(MINIMUM_WINDOW_SIZE[0], MINIMUM_WINDOW_SIZE[1])
         self.resize(width, height)
         self.setWindowIcon(
-            QIcon(str(get_resources_path("assets/icon", "secrandom-icon-paper.png")))
+            QIcon(str(get_data_path("assets/icon", "secrandom-icon-paper.png")))
         )
         self.setWindowTitle(title)
         self.titleBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)

@@ -544,7 +544,7 @@ class quick_draw_student_image_settings(GroupHeaderCardWidget):
 
     def open_student_image_folder(self):
         """打开学生图片文件夹"""
-        folder_path = get_resources_path(STUDENT_IMAGE_FOLDER)
+        folder_path = get_data_path(STUDENT_IMAGE_FOLDER)
         if not folder_path.exists():
             os.makedirs(folder_path, exist_ok=True)
         if folder_path:

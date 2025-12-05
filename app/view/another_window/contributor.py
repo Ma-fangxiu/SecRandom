@@ -62,9 +62,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_1"
                 ),
                 "github": "https://github.com/lzy98276",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor1.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor1.png")),
             },
             {
                 "name": "chenjintang-shrimp",
@@ -72,9 +70,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_2"
                 ),
                 "github": "https://github.com/chenjintang-shrimp",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor2.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor2.png")),
             },
             {
                 "name": "yuanbenxin",
@@ -82,9 +78,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_3"
                 ),
                 "github": "https://github.com/yuanbenxin",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor3.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor3.png")),
             },
             {
                 "name": "LeafS",
@@ -92,9 +86,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_4"
                 ),
                 "github": "https://github.com/LeafS825",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor4.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor4.png")),
             },
             {
                 "name": "QiKeZhiCao",
@@ -102,9 +94,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_5"
                 ),
                 "github": "https://github.com/QiKeZhiCao",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor5.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor5.png")),
             },
             {
                 "name": "Fox-block-offcial",
@@ -112,9 +102,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_6"
                 ),
                 "github": "https://github.com/Fox-block-offcial",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor6.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor6.png")),
             },
             {
                 "name": "Jursin",
@@ -122,9 +110,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_7"
                 ),
                 "github": "https://github.com/jursin",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor7.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor7.png")),
             },
             {
                 "name": "LHGS-github",
@@ -132,9 +118,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_8"
                 ),
                 "github": "https://github.com/LHGS-github",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor8.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor8.png")),
             },
             {
                 "name": "real01bit",
@@ -142,9 +126,7 @@ class contributor_page(QWidget):
                     "about", "contributor", "contributor_role_9"
                 ),
                 "github": "https://github.com/real01bit",
-                "avatar": str(
-                    get_resources_path("assets/contribution", "contributor9.png")
-                ),
+                "avatar": str(get_data_path("assets/contribution", "contributor9.png")),
             },
         ]
 

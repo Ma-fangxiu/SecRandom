@@ -86,7 +86,7 @@ def _load_font_by_setting(font_family_setting):
 
     if font_family_setting in font_map:
         font_file = font_map[font_family_setting]
-        font_path = get_resources_path("font", font_file)
+        font_path = get_data_path("font", font_file)
         font_id = QFontDatabase.addApplicationFont(str(font_path))
 
         if font_id < 0:
@@ -106,7 +106,7 @@ def _load_default_font():
     Returns:
         str: 加载成功的字体家族名称
     """
-    font_path = get_resources_path("font", "HarmonyOS_Sans_SC_Bold.ttf")
+    font_path = get_data_path("font", "HarmonyOS_Sans_SC_Bold.ttf")
     font_id = QFontDatabase.addApplicationFont(str(font_path))
 
     if font_id < 0:
@@ -133,11 +133,11 @@ class FluentSystemIcons(FluentFontIconBase):
 
     def path(self, theme=Theme.AUTO):
         """返回字体文件路径"""
-        return str(get_resources_path("assets", "FluentSystemIcons-Filled.ttf"))
+        return str(get_data_path("assets", "FluentSystemIcons-Filled.ttf"))
 
     def iconNameMapPath(self):
         """返回图标名称到图标码点的映射表文件路径"""
-        return str(get_resources_path("assets", "FluentSystemIcons-Filled.json"))
+        return str(get_data_path("assets", "FluentSystemIcons-Filled.json"))
 
 
 def get_theme_icon(icon_name):
@@ -154,7 +154,7 @@ def get_theme_icon(icon_name):
         if isinstance(icon_name, str) and not icon_name.startswith("\\u"):
             # 尝试从JSON文件中直接获取码点
             try:
-                map_path = get_resources_path("assets", "FluentSystemIcons-Filled.json")
+                map_path = get_data_path("assets", "FluentSystemIcons-Filled.json")
                 with open(map_path, "r", encoding="utf-8") as f:
                     icon_map = json.load(f)
 

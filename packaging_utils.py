@@ -10,12 +10,12 @@ from typing import Iterable, List
 
 PROJECT_ROOT = Path(__file__).parent
 APP_DIR = PROJECT_ROOT / "app"
-RESOURCES_DIR = APP_DIR / "resources"
+DATA_DIR = APP_DIR / "data"
 LANGUAGE_MODULES_DIR = APP_DIR / "Language" / "modules"
 VIEW_DIR = APP_DIR / "view"
 LICENSE_FILE = PROJECT_ROOT / "LICENSE"
 VERSION_FILE = PROJECT_ROOT / "version_info.txt"
-ICON_FILE = PROJECT_ROOT / "resources" / "secrandom-icon-paper.ico"
+ICON_FILE = PROJECT_ROOT / "data" / "secrandom-icon-paper.ico"
 
 
 @dataclass(frozen=True)
@@ -83,8 +83,8 @@ def collect_view_modules() -> List[str]:
 
 def collect_data_includes() -> List[DataInclude]:
     includes: List[DataInclude] = []
-    if RESOURCES_DIR.exists():
-        includes.append(DataInclude(RESOURCES_DIR, "app/resources", is_dir=True))
+    if DATA_DIR.exists():
+        includes.append(DataInclude(DATA_DIR, "data", is_dir=True))
     if LANGUAGE_MODULES_DIR.exists():
         includes.append(
             DataInclude(LANGUAGE_MODULES_DIR, "app/Language/modules", is_dir=True)
@@ -113,7 +113,7 @@ def format_add_data(include: DataInclude) -> str:
 __all__ = [
     "PROJECT_ROOT",
     "APP_DIR",
-    "RESOURCES_DIR",
+    "DATA_DIR",
     "LANGUAGE_MODULES_DIR",
     "VIEW_DIR",
     "LICENSE_FILE",

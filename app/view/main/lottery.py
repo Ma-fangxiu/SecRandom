@@ -21,6 +21,7 @@ from app.common.display.result_display import *
 from app.tools.config import *
 from app.common.lottery.lottery_utils import LotteryUtils
 from app.tools.variable import *
+from app.common.voice.voice import TTSHandler
 
 from app.page_building.another_window import *
 
@@ -48,6 +49,9 @@ class Lottery(QWidget):
         self.long_press_delay = 500  # 开始长按前的延迟时间(毫秒)
         self.is_long_pressing = False  # 是否正在长按
         self.long_press_direction = 0  # 长按方向：1为增加，-1为减少
+
+        # 初始化TTS处理器
+        self.tts_handler = TTSHandler()
 
         self.initUI()
         self.setupSettingsListener()
@@ -600,6 +604,47 @@ class Lottery(QWidget):
                     settings,
                 )
 
+            # 播放语音
+            self.play_voice_result()
+
+    def play_voice_result(self):
+        """播放语音结果"""
+        try:
+            # 准备语音设置
+            voice_settings = {
+                "voice_volume": readme_settings_async(
+                    "basic_voice_settings", "volume_size"
+                ),
+                "voice_speed": readme_settings_async(
+                    "basic_voice_settings", "speech_rate"
+                ),
+                "system_voice_name": readme_settings_async(
+                    "basic_voice_settings", "system_voice_name"
+                ),
+            }
+
+            # 准备奖品名单（只取名字部分）
+            prize_names = [prize[1] for prize in self.final_selected_students]
+
+            # 获取语音引擎类型
+            voice_engine = readme_settings_async("basic_voice_settings", "voice_engine")
+            engine_type = 1 if voice_engine == "Edge TTS" else 0
+
+            # 获取Edge TTS语音名称
+            edge_tts_voice_name = readme_settings_async(
+                "basic_voice_settings", "edge_tts_voice_name"
+            )
+
+            # 调用语音播放
+            self.tts_handler.voice_play(
+                config=voice_settings,
+                student_names=prize_names,
+                engine_type=engine_type,
+                voice_name=edge_tts_voice_name,
+            )
+        except Exception as e:
+            logger.error(f"播放语音失败: {e}", exc_info=True)
+
     def animate_result(self):
         """动画过程中更新显示"""
         self.draw_random()
@@ -850,7 +895,7 @@ class Lottery(QWidget):
     def setup_file_watcher(self):
         """设置文件监控器，监控名单文件夹的变化"""
         try:
-            list_dir = get_path("app/resources/list/lottery_list")
+            list_dir = get_data_path("data", "lottery_list")
 
             if not list_dir.exists():
                 list_dir.mkdir(parents=True, exist_ok=True)
@@ -899,7 +944,7 @@ class Lottery(QWidget):
                     pass
 
             # 重新添加当前目录中的所有JSON文件
-            lot_dir = get_path("app/resources/list/lottery_list")
+            lot_dir = get_data_path("list/lottery_list")
             if lot_dir.exists():
                 for fp in lot_dir.glob("*.json"):
                     try:

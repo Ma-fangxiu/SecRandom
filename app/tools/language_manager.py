@@ -6,7 +6,7 @@ import json
 from typing import Dict, Optional, Any, List
 from loguru import logger
 
-from app.tools.path_utils import get_path, get_resources_path
+from app.tools.path_utils import get_path, get_data_path
 from app.tools.settings_access import readme_settings
 
 # from app.Language.ZH_CN import ZH_CN
@@ -31,7 +31,7 @@ class SimpleLanguageManager:
         self._loaded_languages: Dict[str, Dict[str, Any]] = {}
         self._load_languages_from_modules()
 
-        # 加载resources/Language文件夹下的所有语言文件
+        # 加载data/Language文件夹下的所有语言文件
         self._load_all_languages()
 
     def _get_available_languages_from_modules(self) -> set[str]:
@@ -263,10 +263,10 @@ class SimpleLanguageManager:
         return merged
 
     def _load_all_languages(self) -> None:
-        """加载resources/Language文件夹下的所有语言文件"""
+        """加载data/Language文件夹下的所有语言文件"""
         try:
             # 获取语言文件夹路径
-            language_dir = get_resources_path("Language")
+            language_dir = get_data_path("Language")
 
             if not language_dir or not os.path.exists(language_dir):
                 return

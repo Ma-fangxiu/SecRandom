@@ -188,3 +188,5 @@ cython_debug/
 
 # Scripts' generations
 /scripts/*.json
+/data/history
+/data/list

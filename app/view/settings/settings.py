@@ -50,7 +50,7 @@ class SettingsWindow(MSFluentWindow):
         self.setMinimumSize(MINIMUM_WINDOW_SIZE[0], MINIMUM_WINDOW_SIZE[1])
         self.setWindowTitle("SecRandom")
         self.setWindowIcon(
-            QIcon(str(get_resources_path("assets/icon", "secrandom-icon-paper.png")))
+            QIcon(str(get_data_path("assets/icon", "secrandom-icon-paper.png")))
         )
 
         # 初始化URL命令处理器
@@ -80,7 +80,7 @@ class SettingsWindow(MSFluentWindow):
             "notificationSettingsInterface",
             "safetySettingsInterface",
             "customSettingsInterface",
-            # "voiceSettingsInterface",
+            "voiceSettingsInterface",
             "historyInterface",
             "moreSettingsInterface",
             "updateInterface",
@@ -355,12 +355,12 @@ class SettingsWindow(MSFluentWindow):
                 "safety_settings_page",
                 True,
             ),
-            # (
-            #     "voice_settings",
-            #     "voiceSettingsInterface",
-            #     "voice_settings_page",
-            #     True,
-            # ),
+            (
+                "voice_settings",
+                "voiceSettingsInterface",
+                "voice_settings_page",
+                True,
+            ),
             ("settings_history", "historyInterface", "history_page", True),
             (
                 "more_settings",
@@ -545,7 +545,7 @@ class SettingsWindow(MSFluentWindow):
                 "notificationSettingsInterface",
                 "safetySettingsInterface",
                 "customSettingsInterface",
-                # "voiceSettingsInterface",
+                "voiceSettingsInterface",
                 "historyInterface",
                 "moreSettingsInterface",
                 "updateInterface",
@@ -667,14 +667,14 @@ class SettingsWindow(MSFluentWindow):
                 "safety_settings",
                 "title",
             ),
-            # (
-            #     "voice_settings",
-            #     "voiceSettingsInterface",
-            #     "voice_settings_item",
-            #     "ic_fluent_person_voice_20_filled",
-            #     "voice_settings",
-            #     "title",
-            # ),
+            (
+                "voice_settings",
+                "voiceSettingsInterface",
+                "voice_settings_item",
+                "ic_fluent_person_voice_20_filled",
+                "voice_settings",
+                "title",
+            ),
             (
                 "settings_history",
                 "historyInterface",

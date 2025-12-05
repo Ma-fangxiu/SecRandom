@@ -101,7 +101,7 @@ class PrizeNameSettingWindow(QWidget):
         """加载现有奖品名称"""
         try:
             # 获取奖池名单目录
-            lottery_list_dir = get_path("app/resources/list/lottery_list")
+            lottery_list_dir = get_data_path("data", "lottery_list")
 
             # 从设置中获取奖池名称
             pool_name = readme_settings_async("lottery_list", "select_pool_name")
@@ -236,7 +236,7 @@ class PrizeNameSettingWindow(QWidget):
                 return
 
             # 获取文件路径
-            lottery_list_dir = get_path("app/resources/list/lottery_list")
+            lottery_list_dir = get_data_path("data", "lottery_list")
             lottery_list_dir.mkdir(parents=True, exist_ok=True)
 
             # 从设置中获取奖池名称

@@ -32,7 +32,7 @@ elif sys.platform.startswith("linux"):
 
 from app.tools.path_utils import (
     get_app_root,
-    get_resources_path,
+    get_data_path,
     get_settings_path,
     get_path,
 )
@@ -404,7 +404,7 @@ def send_system_notification(title: str, content: str) -> bool:
     """
     try:
         # 获取软件图标路径
-        icon_path = str(get_resources_path("assets", "icon/secrandom-icon-paper.ico"))
+        icon_path = str(get_data_path("assets", "icon/secrandom-icon-paper.ico"))
 
         if sys.platform == "win32":
             # Windows平台
@@ -819,9 +819,9 @@ def export_diagnostic_data(parent: Optional[QWidget] = None) -> None:
             # 创建需要导出的目录列表
             export_folders = [
                 Path("config"),
-                Path("app") / "resources" / "list",
-                Path("app") / "resources" / "Language",
-                Path("app") / "resources" / "history",
+                Path("app") / "data" / "list",
+                Path("app") / "data" / "Language",
+                Path("app") / "data" / "history",
                 Path("logs"),
             ]
 
@@ -1240,9 +1240,9 @@ def export_all_data(parent: Optional[QWidget] = None) -> None:
             file_path += ".zip"
         dirs_to_backup = [
             ("config", Path("config")),
-            ("list", Path("app") / "resources" / "list"),
-            ("Language", Path("app") / "resources" / "Language"),
-            ("history", Path("app") / "resources" / "history"),
+            ("list", Path("app") / "data" / "list"),
+            ("Language", Path("app") / "data" / "Language"),
+            ("history", Path("app") / "data" / "history"),
             ("logs", Path("logs")),
         ]
         with zipfile.ZipFile(file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -1398,9 +1398,9 @@ def import_all_data(parent: Optional[QWidget] = None) -> None:
                         # 映射目录到实际路径
                         target_dirs = {
                             "config": Path("config"),
-                            "list": Path("app/resources/list"),
-                            "Language": Path("app/resources/Language"),
-                            "history": Path("app/resources/history"),
+                            "list": Path("data/list"),
+                            "Language": Path("data/Language"),
+                            "history": Path("data/history"),
                             "logs": Path("logs"),
                         }
 
@@ -1500,9 +1500,9 @@ def import_all_data(parent: Optional[QWidget] = None) -> None:
                     # 映射目录到实际路径
                     target_dirs = {
                         "config": Path("config"),
-                        "list": Path("app/resources/list"),
-                        "Language": Path("app/resources/Language"),
-                        "history": Path("app/resources/history"),
+                        "list": Path("data/list"),
+                        "Language": Path("data/Language"),
+                        "history": Path("data/history"),
                         "logs": Path("logs"),
                     }
 
@@ -1632,9 +1632,7 @@ def record_drawn_student(class_name: str, gender: str, group: str, student_name)
         student_name: 学生名称或学生列表
     """
     # 构建文件路径，与remove_record保持一致
-    file_path = get_resources_path(
-        "TEMP", f"draw_until_{class_name}_{gender}_{group}.json"
-    )
+    file_path = get_data_path("TEMP", f"draw_until_{class_name}_{gender}_{group}.json")
 
     # 确保目录存在
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -1765,9 +1763,7 @@ def _save_drawn_records(file_path: str, drawn_records: dict) -> None:
 # ======= 读取已抽取记录 =======
 def read_drawn_record(class_name: str, gender: str, group: str):
     """读取已抽取记录"""
-    file_path = get_resources_path(
-        "TEMP", f"draw_until_{class_name}_{gender}_{group}.json"
-    )
+    file_path = get_data_path("TEMP", f"draw_until_{class_name}_{gender}_{group}.json")
     if os.path.exists(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as file:
@@ -1822,7 +1818,7 @@ def remove_record(class_name: str, gender: str, group: str, _prefix: str = "0"):
     if prefix == "all":
         # 构建搜索模式，匹配所有前缀的文件夹
         search_pattern = os.path.join(
-            "app", "resources", "TEMP", f"draw_*_{class_name}_{gender}_{group}.json"
+            "data", "TEMP", f"draw_*_{class_name}_{gender}_{group}.json"
         )
 
         # 查找所有匹配的文件
@@ -1838,7 +1834,7 @@ def remove_record(class_name: str, gender: str, group: str, _prefix: str = "0"):
                 logger.error(f"删除文件{file_path}失败: {e}")
     elif prefix == "until":
         # 只删除特定前缀的文件
-        file_path = get_resources_path(
+        file_path = get_data_path(
             "TEMP", f"draw_{prefix}_{class_name}_{gender}_{group}.json"
         )
         try:
@@ -1850,7 +1846,7 @@ def remove_record(class_name: str, gender: str, group: str, _prefix: str = "0"):
             logger.error(f"删除文件{file_path}失败: {e}")
     elif prefix == "restart":  # 重启后清除
         # 构建搜索模式，匹配所有前缀的文件夹
-        search_pattern = os.path.join("app", "resources", "TEMP", "draw_*.json")
+        search_pattern = os.path.join("data", "TEMP", "draw_*.json")
         # 查找所有匹配的文件
         file_list = glob.glob(search_pattern)
         # 删除找到的文件
@@ -1979,7 +1975,7 @@ def calculate_remaining_count(
 
 # ======= 奖池抽取记录 =======
 def record_drawn_prize(pool_name: str, prize_names):
-    file_path = get_resources_path("TEMP", f"draw_until_prize_{pool_name}.json")
+    file_path = get_data_path("TEMP", f"draw_until_prize_{pool_name}.json")
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     drawn_records = _load_drawn_records(file_path)
     names = _extract_student_names(prize_names)
@@ -1992,7 +1988,7 @@ def record_drawn_prize(pool_name: str, prize_names):
 
 
 def read_drawn_record_simple(pool_name: str):
-    file_path = get_resources_path("TEMP", f"draw_until_prize_{pool_name}.json")
+    file_path = get_data_path("TEMP", f"draw_until_prize_{pool_name}.json")
     if os.path.exists(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as file:
@@ -2015,9 +2011,7 @@ def read_drawn_record_simple(pool_name: str):
 
 def reset_drawn_prize_record(self, pool_name: str):
     try:
-        pattern = os.path.join(
-            "app", "resources", "TEMP", f"draw_*_prize_{pool_name}.json"
-        )
+        pattern = os.path.join("data", "TEMP", f"draw_*_prize_{pool_name}.json")
         for fp in glob.glob(pattern):
             try:
                 os.remove(fp)

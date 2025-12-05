@@ -514,7 +514,7 @@ class lottery_lottery_image_settings(GroupHeaderCardWidget):
 
     def open_lottery_image_folder(self):
         """打开奖品图片文件夹"""
-        folder_path = get_resources_path(PRIZE_IMAGE_FOLDER)
+        folder_path = get_data_path(PRIZE_IMAGE_FOLDER)
         if not folder_path.exists():
             os.makedirs(folder_path, exist_ok=True)
         if folder_path:

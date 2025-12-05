@@ -35,7 +35,7 @@ SPEC_FILE = PROJECT_ROOT / "Secrandom.spec"
 
 
 def _print_packaging_summary() -> None:
-    """Log a quick overview of the resources and modules that will be bundled."""
+    """Log a quick overview of the data and modules that will be bundled."""
 
     data_includes = collect_data_includes()
     hidden_imports = normalize_hidden_imports(

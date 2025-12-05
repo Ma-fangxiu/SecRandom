@@ -401,7 +401,7 @@ def check_for_updates_on_startup():
                 compare_result = compare_versions(VERSION, latest_version)
 
                 # 获取下载文件夹路径
-                download_dir = get_resources_path("downloads")
+                download_dir = get_data_path("downloads")
                 ensure_dir(download_dir)
 
                 # 构建预期的文件名

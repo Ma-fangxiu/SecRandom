@@ -14,7 +14,7 @@ from app.tools.path_utils import *
 def get_class_name_list() -> List[str]:
     """获取班级名称列表
 
-    从 app/resources/list/roll_call_list 文件夹中读取所有班级名单文件，
+    从 data/list/roll_call_list 文件夹中读取所有班级名单文件，
     并返回班级名称列表
 
     Returns:
@@ -22,7 +22,7 @@ def get_class_name_list() -> List[str]:
     """
     try:
         # 获取班级名单文件夹路径
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
+        roll_call_list_dir = get_data_path("list/roll_call_list")
 
         # 如果文件夹不存在，创建文件夹
         if not roll_call_list_dir.exists():
@@ -51,7 +51,7 @@ def get_class_name_list() -> List[str]:
 def get_student_list(class_name: str) -> List[Dict[str, Any]]:
     """获取指定班级的学生列表
 
-    从 app/resources/list/roll_call_list 文件夹中读取指定班级的名单文件，
+    从 data/list/roll_call_list 文件夹中读取指定班级的名单文件，
     并返回学生列表
 
     Args:
@@ -62,7 +62,7 @@ def get_student_list(class_name: str) -> List[Dict[str, Any]]:
     """
     try:
         # 获取班级名单文件路径
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
+        roll_call_list_dir = get_data_path("list/roll_call_list")
         class_file_path = roll_call_list_dir / f"{class_name}.json"
 
         # 如果文件不存在，返回空列表
@@ -100,7 +100,7 @@ def get_student_list(class_name: str) -> List[Dict[str, Any]]:
 def get_group_list(class_name: str) -> List[Dict[str, Any]]:
     """获取指定班级的小组列表
 
-    从 app/resources/list/roll_call_list 文件夹中读取指定班级的名单文件，
+    从 data/list/roll_call_list 文件夹中读取指定班级的名单文件，
     并返回小组列表
 
     Args:
@@ -123,7 +123,7 @@ def get_group_list(class_name: str) -> List[Dict[str, Any]]:
 def get_gender_list(class_name: str) -> List[str]:
     """获取指定班级的性别列表
 
-    从 app/resources/list/roll_call_list 文件夹中读取指定班级的名单文件，
+    从 data/list/roll_call_list 文件夹中读取指定班级的名单文件，
     并返回性别列表
 
     Args:
@@ -146,7 +146,7 @@ def get_gender_list(class_name: str) -> List[str]:
 def get_group_members(class_name: str, group_name: str) -> List[Dict[str, Any]]:
     """获取指定班级中指定小组的成员列表
 
-    从 app/resources/list/roll_call_list 文件夹中读取指定班级的名单文件，
+    从 data/list/roll_call_list 文件夹中读取指定班级的名单文件，
     并返回指定小组的成员列表
 
     Args:
@@ -174,7 +174,7 @@ def get_group_members(class_name: str, group_name: str) -> List[Dict[str, Any]]:
 def get_pool_name_list() -> List[str]:
     """获取奖池名称列表
 
-    从 app/resources/list/lottery_list 文件夹中读取所有奖池名单文件，
+    从 data/list/lottery_list 文件夹中读取所有奖池名单文件，
     并返回奖池名称列表
 
     Returns:
@@ -182,7 +182,7 @@ def get_pool_name_list() -> List[str]:
     """
     try:
         # 获取奖池名单文件夹路径
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
 
         # 如果文件夹不存在，创建文件夹
         if not lottery_list_dir.exists():
@@ -211,7 +211,7 @@ def get_pool_name_list() -> List[str]:
 def get_pool_data(pool_name: str) -> Dict[str, Any]:
     """获取指定奖池的数据
 
-    从 app/resources/list/lottery_list 文件夹中读取指定奖池的名单文件，
+    从 data/list/lottery_list 文件夹中读取指定奖池的名单文件，
     并返回奖池数据
 
     Args:
@@ -222,7 +222,7 @@ def get_pool_data(pool_name: str) -> Dict[str, Any]:
     """
     try:
         # 获取奖池名单文件路径
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
         pool_file_path = lottery_list_dir / f"{pool_name}.json"
 
         # 如果文件不存在，返回空字典
@@ -259,7 +259,7 @@ def get_pool_data(pool_name: str) -> Dict[str, Any]:
 def get_pool_list(pool_name: str) -> List[Dict[str, Any]]:
     """获取指定奖池的奖品列表
 
-    从 app/resources/list/lottery_list 文件夹中读取指定奖池的名单文件，
+    从 data/list/lottery_list 文件夹中读取指定奖池的名单文件，
     并返回奖品列表
 
     Args:
@@ -270,7 +270,7 @@ def get_pool_list(pool_name: str) -> List[Dict[str, Any]]:
     """
     try:
         # 获取奖池名单文件路径
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
         pool_file_path = lottery_list_dir / f"{pool_name}.json"
 
         # 如果文件不存在，返回空列表
@@ -407,7 +407,7 @@ def export_student_data(
 ) -> Tuple[bool, str]:
     """导出学生数据到指定文件
 
-    从 app/resources/list/roll_call_list 文件夹中读取指定班级的名单文件，
+    从 data/list/roll_call_list 文件夹中读取指定班级的名单文件，
     并根据指定格式导出到文件
 
     Args:
@@ -420,7 +420,7 @@ def export_student_data(
     """
     try:
         # 获取班级名单文件路径
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
+        roll_call_list_dir = get_data_path("list/roll_call_list")
         class_file_path = roll_call_list_dir / f"{class_name}.json"
 
         # 如果文件不存在，返回错误

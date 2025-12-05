@@ -115,7 +115,7 @@ class lottery_table(GroupHeaderCardWidget):
     def setup_file_watcher(self):
         """设置文件系统监视器，监控班级名单文件夹的变化"""
         # 获取抽奖名单文件夹路径
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
 
         # 确保目录存在
         if not lottery_list_dir.exists():
@@ -259,7 +259,7 @@ class lottery_table(GroupHeaderCardWidget):
         item_name = name_item.text()
 
         # 加载当前抽奖池数据
-        pool_file = get_path("app/resources/list/lottery_list") / f"{pool_name}.json"
+        pool_file = get_data_path("list/lottery_list") / f"{pool_name}.json"
         try:
             with open_file(pool_file, "r", encoding="utf-8") as f:
                 pool_data = json.load(f, object_pairs_hook=OrderedDict)

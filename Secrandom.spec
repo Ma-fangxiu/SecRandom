@@ -17,7 +17,7 @@ base_datas = [(str(item.source), item.target) for item in collect_data_includes(
 try:
     qfluentwidgets_datas = collect_data_files("qfluentwidgets")
 except Exception as exc:
-    print(f"Warning: unable to collect qfluentwidgets resources: {exc}")
+    print(f"Warning: unable to collect qfluentwidgets data: {exc}")
     qfluentwidgets_datas = []
 
 all_datas = base_datas + qfluentwidgets_datas
@@ -75,7 +75,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="resources/secrandom-icon-paper.ico",
+    icon="data/secrandom-icon-paper.ico",
 )
 
 # 创建目录模式输出

@@ -12,7 +12,7 @@ from PySide6.QtCore import QTimer, QEvent, Signal
 from qfluentwidgets import MSFluentWindow, NavigationItemPosition
 
 from app.tools.variable import MINIMUM_WINDOW_SIZE, APP_INIT_DELAY
-from app.tools.path_utils import get_resources_path
+from app.tools.path_utils import get_data_path
 from app.tools.path_utils import get_app_root
 from app.tools.personalised import get_theme_icon
 from app.Language.obtain_language import get_content_name_async
@@ -63,7 +63,7 @@ class MainWindow(MSFluentWindow):
         self.setMinimumSize(MINIMUM_WINDOW_SIZE[0], MINIMUM_WINDOW_SIZE[1])
         self.setWindowTitle("SecRandom")
         self.setWindowIcon(
-            QIcon(str(get_resources_path("assets/icon", "secrandom-icon-paper.png")))
+            QIcon(str(get_data_path("assets/icon", "secrandom-icon-paper.png")))
         )
 
         self._position_window()

@@ -41,7 +41,7 @@ def get_history_file_path(history_type: str, file_name: str) -> Path:
     Returns:
         Path: 历史记录文件路径
     """
-    history_dir = get_path(f"app/resources/history/{history_type}_history")
+    history_dir = get_path(f"data/history/{history_type}_history")
     history_dir.mkdir(parents=True, exist_ok=True)
     return history_dir / f"{file_name}.json"
 
@@ -105,7 +105,7 @@ def get_all_history_names(history_type: str) -> List[str]:
         List[str]: 历史记录名称列表
     """
     try:
-        history_dir = get_path(f"app/resources/history/{history_type}_history")
+        history_dir = get_path(f"data/history/{history_type}_history")
         if not history_dir.exists():
             return []
         history_files = list(history_dir.glob("*.json"))

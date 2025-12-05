@@ -98,7 +98,7 @@ class PrizeWeightSettingWindow(QWidget):
     def __load_existing_weights(self):
         """加载现有奖品权重"""
         try:
-            lottery_list_dir = get_path("app/resources/list/lottery_list")
+            lottery_list_dir = get_data_path("lottery_list")
 
             # 从设置中获取奖池名称
             pool_name = readme_settings_async("lottery_list", "select_pool_name")
@@ -229,7 +229,7 @@ class PrizeWeightSettingWindow(QWidget):
                 return
 
             # 获取文件路径
-            lottery_list_dir = get_path("app/resources/list/lottery_list")
+            lottery_list_dir = get_data_path("list/lottery_list")
             lottery_list_dir.mkdir(parents=True, exist_ok=True)
 
             # 从设置中获取班级名称

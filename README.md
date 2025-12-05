@@ -1,6 +1,6 @@
 <div align="center">
 
-<image src="resources/secrandom-icon-paper.png" width="128" height="128" />
+<image src="data/secrandom-icon-paper.png" width="128" height="128" />
 
 # SecRandom - 公平随机抽取系统
 
@@ -16,7 +16,7 @@
 [![bilibili](https://img.shields.io/badge/-UP%E4%B8%BB%EF%BD%9C黎泽懿-%23FB7299?style=for-the-badge&logo=bilibili)](https://space.bilibili.com/520571577)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://opensource.org/licenses/GPL-3.0)
 
-**语言选择** [ **✔简体中文** | [English](resources/README_EN.md) | [繁體中文](resources/README_ZH_TW.md) ]
+**语言选择** [ **✔简体中文** | [English](data/README_EN.md) | [繁體中文](data/README_ZH_TW.md) ]
 
 </div>
 
@@ -95,10 +95,10 @@
 <details>
 <summary>📸 软件截图展示 ✨</summary>
 
-![点名界面](./resources/ScreenShots/主界面_抽人_浅色.png)
-![抽奖界面](./resources/ScreenShots/主界面_抽奖_浅色.png)
-![历史记录](./resources/ScreenShots/主界面_抽人历史记录_浅色.png)
-![设置界面](./resources/ScreenShots/设置_抽人设置_浅色.png)
+![点名界面](./data/ScreenShots/主界面_抽人_浅色.png)
+![抽奖界面](./data/ScreenShots/主界面_抽奖_浅色.png)
+![历史记录](./data/ScreenShots/主界面_抽人历史记录_浅色.png)
+![设置界面](./data/ScreenShots/设置_抽人设置_浅色.png)
 
 </details>
 
@@ -110,15 +110,15 @@
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/lzy98276"><img src="app/resources/assets/contribution/contributor1.png" width="100px;" alt="lzy98276"/><br /><sub><b>lzy98276 (黎泽懿_Aionflux)</b></sub></a><br /><a href="#content-lzy98276" title="Content">🖋</a> <a href="#design-lzy98276" title="Design">🎨</a> <a href="#ideas-lzy98276" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-lzy98276" title="Maintenance">🚧</a> <a href="#doc-lzy98276" title="Documentation">📖</a> <a href="#bug-lzy98276" title="Bug reports">🐛</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/chenjintang-shrimp"><img src="app/resources/assets/contribution/contributor2.png" width="100px;" alt="chenjintang-shrimp"/><br /><sub><b>chenjintang-shrimp</b></sub></a><br /><a href="#code-chenjintang-shrimp" title="Code">💻</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/yuanbenxin"><img src="app/resources/assets/contribution/contributor3.png" width="100px;" alt="yuanbenxin"/><br /><sub><b>yuanbenxin (本新同学)</b></sub></a><br /><a href="#code-yuanbenxin" title="Code">💻</a> <a href="#design-yuanbenxin" title="Design">🎨</a> <a href="#maintenance-yuanbenxin" title="Maintenance">🚧</a> <a href="#doc-yuanbenxin" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/LeafS825"><img src="app/resources/assets/contribution/contributor4.png" width="100px;" alt="LeafS"/><br /><sub><b>LeafS</b></sub></a><br /><a href="#doc-LeafS" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/QiKeZhiCao"><img src="app/resources/assets/contribution/contributor5.png" width="100px;" alt="QiKeZhiCao"/><br /><sub><b>QiKeZhiCao (弃稞之草)</b></sub></a><br /><a href="#ideas-QiKeZhiCao" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-QiKeZhiCao" title="Maintenance">🚧</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/Fox-block-offcial"><img src="app/resources/assets/contribution/contributor6.png" width="100px;" alt="Fox-block-offcial"/><br /><sub><b>Fox-block-offcial</b></sub></a><br /><a href="#bug-Fox-block-offcial" title="Bug reports">🐛</a> <a href="#testing-Fox-block-offcial" title="Testing">⚠️</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/jursin"><img src="app/resources/assets/contribution/contributor7.png" width="100px;" alt="Jursin"/><br /><sub><b>Jursin</b></sub></a><br /><a href="#code-jursin" title="Code">💻</a> <a href="#design-jursin" title="Design">🎨</a> <a href="#maintenance-jursin" title="Maintenance">🚧</a> <a href="#doc-jursin" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/LHGS-github"><img src="app/resources/assets/contribution/contributor8.png" width="100px;" alt="LHGS-github"/><br /><sub><b>LHGS-github</b></sub></a><br /><a href="#doc-LHGS-github" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="11.11%"><a href="https://github.com/real01bit"><img src="app/resources/assets/contribution/contributor9.png" width="100px;" alt="real01bit"/><br /><sub><b>real01bit</b></sub></a><br /><a href="#code-real01bit" title="Code">💻</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/lzy98276"><img src="data/assets/contribution/contributor1.png" width="100px;" alt="lzy98276"/><br /><sub><b>lzy98276 (黎泽懿_Aionflux)</b></sub></a><br /><a href="#content-lzy98276" title="Content">🖋</a> <a href="#design-lzy98276" title="Design">🎨</a> <a href="#ideas-lzy98276" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-lzy98276" title="Maintenance">🚧</a> <a href="#doc-lzy98276" title="Documentation">📖</a> <a href="#bug-lzy98276" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/chenjintang-shrimp"><img src="data/assets/contribution/contributor2.png" width="100px;" alt="chenjintang-shrimp"/><br /><sub><b>chenjintang-shrimp</b></sub></a><br /><a href="#code-chenjintang-shrimp" title="Code">💻</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/yuanbenxin"><img src="data/assets/contribution/contributor3.png" width="100px;" alt="yuanbenxin"/><br /><sub><b>yuanbenxin (本新同学)</b></sub></a><br /><a href="#code-yuanbenxin" title="Code">💻</a> <a href="#design-yuanbenxin" title="Design">🎨</a> <a href="#maintenance-yuanbenxin" title="Maintenance">🚧</a> <a href="#doc-yuanbenxin" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/LeafS825"><img src="data/assets/contribution/contributor4.png" width="100px;" alt="LeafS"/><br /><sub><b>LeafS</b></sub></a><br /><a href="#doc-LeafS" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/QiKeZhiCao"><img src="data/assets/contribution/contributor5.png" width="100px;" alt="QiKeZhiCao"/><br /><sub><b>QiKeZhiCao (弃稞之草)</b></sub></a><br /><a href="#ideas-QiKeZhiCao" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-QiKeZhiCao" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/Fox-block-offcial"><img src="data/assets/contribution/contributor6.png" width="100px;" alt="Fox-block-offcial"/><br /><sub><b>Fox-block-offcial</b></sub></a><br /><a href="#bug-Fox-block-offcial" title="Bug reports">🐛</a> <a href="#testing-Fox-block-offcial" title="Testing">⚠️</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/jursin"><img src="data/assets/contribution/contributor7.png" width="100px;" alt="Jursin"/><br /><sub><b>Jursin</b></sub></a><br /><a href="#code-jursin" title="Code">💻</a> <a href="#design-jursin" title="Design">🎨</a> <a href="#maintenance-jursin" title="Maintenance">🚧</a> <a href="#doc-jursin" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/LHGS-github"><img src="data/assets/contribution/contributor8.png" width="100px;" alt="LHGS-github"/><br /><sub><b>LHGS-github</b></sub></a><br /><a href="#doc-LHGS-github" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="11.11%"><a href="https://github.com/real01bit"><img src="data/assets/contribution/contributor9.png" width="100px;" alt="real01bit"/><br /><sub><b>real01bit</b></sub></a><br /><a href="#code-real01bit" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

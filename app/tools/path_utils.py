@@ -10,7 +10,7 @@
 
 # ====================== 3. 特定路径获取便捷函数 ======================
 # - get_settings_path() - 获取设置文件路径
-# - get_resources_path() - 获取资源文件路径
+# - get_data_path() - 获取资源文件路径
 # - get_config_path()   - 获取配置文件路径
 # - get_temp_path()     - 获取临时文件路径
 # - get_audio_path()    - 获取音频文件路径
@@ -147,7 +147,7 @@ class PathGetter:
         """
         return self._path_manager.get_absolute_path(f"config/{filename}")
 
-    def get_resources_path(self, resource_type: str, filename: str = "") -> Path:
+    def get_data_path(self, resource_type: str, filename: str = "") -> Path:
         """获取资源文件路径
 
         Args:
@@ -159,12 +159,10 @@ class PathGetter:
         """
         if filename:
             return self._path_manager.get_absolute_path(
-                f"app/resources/{resource_type}/{filename}"
+                f"data/{resource_type}/{filename}"
             )
         else:
-            return self._path_manager.get_absolute_path(
-                f"app/resources/{resource_type}"
-            )
+            return self._path_manager.get_absolute_path(f"data/{resource_type}")
 
     def get_config_path(self, config_type: str, filename: str = "") -> Path:
         """获取配置文件路径
@@ -206,7 +204,7 @@ class PathGetter:
         Returns:
             Path: 音频文件的绝对路径
         """
-        return self._path_manager.get_absolute_path(f"app/resources/audio/{filename}")
+        return self._path_manager.get_absolute_path(f"data/audio/{filename}")
 
     def get_font_path(self, filename: str = DEFAULT_FONT_FILENAME_PRIMARY) -> Path:
         """获取字体文件路径
@@ -217,7 +215,7 @@ class PathGetter:
         Returns:
             Path: 字体文件的绝对路径
         """
-        return self._path_manager.get_absolute_path(f"app/resources/font/{filename}")
+        return self._path_manager.get_absolute_path(f"data/font/{filename}")
 
 
 # ==================================================
@@ -390,7 +388,7 @@ def get_settings_path(filename: str = DEFAULT_SETTINGS_FILENAME) -> Path:
     return path_getter.get_settings_path(filename)
 
 
-def get_resources_path(config_type: str, filename: str = "") -> Path:
+def get_data_path(config_type: str, filename: str = "") -> Path:
     """获取资源文件路径的便捷函数
 
     Args:
@@ -400,7 +398,7 @@ def get_resources_path(config_type: str, filename: str = "") -> Path:
     Returns:
         Path: 资源文件的绝对路径
     """
-    return path_getter.get_resources_path(config_type, filename)
+    return path_getter.get_data_path(config_type, filename)
 
 
 def get_config_path(config_type: str, filename: str = "") -> Path:

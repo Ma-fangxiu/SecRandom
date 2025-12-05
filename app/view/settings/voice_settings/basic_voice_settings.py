@@ -87,18 +87,6 @@ class basic_settings_voice_engine(GroupHeaderCardWidget):
         if current_engine == "Edge TTS":
             QTimer.singleShot(1000, self._async_update_edge_tts_voices)
 
-        # 语音播放设备设置
-        self.voice_playback = ComboBox()
-        self.voice_playback.addItems(
-            get_content_combo_name_async("basic_voice_settings", "voice_playback")
-        )
-        self.voice_playback.setCurrentText(
-            readme_settings_async("basic_voice_settings", "voice_playback")
-        )
-        self.voice_playback.currentTextChanged.connect(
-            lambda text: update_settings("basic_voice_settings", "voice_playback", text)
-        )
-
         # 语速调节设置
         self.speech_rate = SpinBox()
         self.speech_rate.setFixedWidth(WIDTH_SPINBOX)
@@ -125,12 +113,6 @@ class basic_settings_voice_engine(GroupHeaderCardWidget):
                 "basic_voice_settings", "edge_tts_voice_name"
             ),
             self.edge_tts_voice_name,
-        )
-        self.addGroup(
-            get_theme_icon("ic_fluent_speaker_0_20_filled"),
-            get_content_name_async("basic_voice_settings", "voice_playback"),
-            get_content_description_async("basic_voice_settings", "voice_playback"),
-            self.voice_playback,
         )
         self.addGroup(
             get_theme_icon("ic_fluent_top_speed_20_filled"),
@@ -341,22 +323,6 @@ class basic_settings_system_volume(GroupHeaderCardWidget):
         )
         self.setBorderRadius(8)
 
-        # 系统音量控制类型设置
-        self.system_volume_control = ComboBox()
-        self.system_volume_control.addItems(
-            get_content_combo_name_async(
-                "basic_voice_settings", "system_volume_control"
-            )
-        )
-        self.system_volume_control.setCurrentText(
-            readme_settings_async("basic_voice_settings", "system_volume_control")
-        )
-        self.system_volume_control.currentTextChanged.connect(
-            lambda text: update_settings(
-                "basic_voice_settings", "system_volume_control", text
-            )
-        )
-
         # 系统音量大小设置
         self.system_volume_size = SpinBox()
         self.system_volume_size.setFixedWidth(WIDTH_SPINBOX)
@@ -372,14 +338,6 @@ class basic_settings_system_volume(GroupHeaderCardWidget):
         )
 
         # 添加设置项到分组
-        self.addGroup(
-            get_theme_icon("ic_fluent_speaker_settings_20_filled"),
-            get_content_name_async("basic_voice_settings", "system_volume_control"),
-            get_content_description_async(
-                "basic_voice_settings", "system_volume_control"
-            ),
-            self.system_volume_control,
-        )
         self.addGroup(
             get_theme_icon("ic_fluent_speaker_edit_20_filled"),
             get_content_name_async("basic_voice_settings", "system_volume_size"),

@@ -612,7 +612,7 @@ class ImportPrizeNameWindow(QWidget):
     def __save_prize_data(self, pool_name: str, prize_rows: List[Dict[str, Any]]):
         """保存奖品数据到班级名单文件"""
         # 确保奖池名单目录存在
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
         lottery_list_dir.mkdir(parents=True, exist_ok=True)
 
         # 创建班级名单文件路径

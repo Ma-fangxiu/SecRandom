@@ -372,7 +372,7 @@ class update(QWidget):
         latest_version_no = latest_version_info["version_no"]
 
         # 获取下载文件夹路径，与update_utils.py保持一致
-        download_dir = get_resources_path("downloads")
+        download_dir = get_data_path("downloads")
         ensure_dir(download_dir)
 
         # 构建预期的文件名，使用与update_utils.py一致的格式

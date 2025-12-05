@@ -268,9 +268,7 @@ class ResultDisplayUtils:
             if show_student_image:
                 image_name = str(selected)
                 for ext in SUPPORTED_IMAGE_EXTENSIONS:
-                    temp_path = get_resources_path(
-                        "images", f"students/{image_name}{ext}"
-                    )
+                    temp_path = get_data_path("images", f"students/{image_name}{ext}")
                     if file_exists(temp_path):
                         current_image_path = str(temp_path)
                         break

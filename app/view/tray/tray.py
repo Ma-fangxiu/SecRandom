@@ -10,7 +10,7 @@ from loguru import logger
 
 from app.tools.variable import MENU_AUTO_CLOSE_TIMEOUT
 from app.common.safety.verify_ops import require_and_run
-from app.tools.path_utils import get_resources_path
+from app.tools.path_utils import get_data_path
 from app.Language.obtain_language import readme_settings_async, get_content_name_async
 from app.common.IPC_URL.url_command_handler import URLCommandHandler
 
@@ -40,7 +40,7 @@ class Tray(QSystemTrayIcon):
         super().__init__(parent)
         self.main_window = parent
         self.setIcon(
-            QIcon(str(get_resources_path("assets/icon", "secrandom-icon-paper.png")))
+            QIcon(str(get_data_path("assets/icon", "secrandom-icon-paper.png")))
         )
         self.setToolTip("SecRandom")
         self.activated.connect(self._on_tray_activated)

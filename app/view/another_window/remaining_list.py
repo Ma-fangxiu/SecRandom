@@ -26,7 +26,7 @@ from app.tools.variable import (
     STUDENT_CARD_FIXED_HEIGHT,
     STUDENT_CARD_MARGIN,
 )
-from app.tools.path_utils import get_path
+from app.tools.path_utils import get_data_path
 from app.tools.personalised import load_custom_font
 from app.Language.obtain_language import (
     get_content_name_async,
@@ -325,8 +325,8 @@ class RemainingListPage(QWidget):
 
     def get_students_file(self):
         """获取学生或奖池数据文件路径"""
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        roll_call_list_dir = get_data_path("list/roll_call_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
         roll_file = roll_call_list_dir / f"{self.class_name}.json"
         lottery_file = lottery_list_dir / f"{self.class_name}.json"
         if roll_file.exists():

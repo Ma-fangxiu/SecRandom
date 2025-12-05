@@ -313,10 +313,10 @@ class lottery_history_table(GroupHeaderCardWidget):
         if not self.current_pool_name:
             return
         try:
-            lottery_file = get_resources_path(
+            lottery_file = get_data_path(
                 "list/lottery_list", f"{self.current_pool_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/lottery_history", f"{self.current_pool_name}.json"
             )
             with open_file(lottery_file, "r", encoding="utf-8") as f:
@@ -441,10 +441,10 @@ class lottery_history_table(GroupHeaderCardWidget):
         if not self.current_pool_name:
             return
         try:
-            lottery_file = get_resources_path(
+            lottery_file = get_data_path(
                 "list/lottery_list", f"{self.current_pool_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/lottery_history", f"{self.current_pool_name}.json"
             )
             with open_file(lottery_file, "r", encoding="utf-8") as f:
@@ -552,10 +552,10 @@ class lottery_history_table(GroupHeaderCardWidget):
         if not self.current_pool_name:
             return
         try:
-            lottery_file = get_resources_path(
+            lottery_file = get_data_path(
                 "list/lottery_list", f"{self.current_pool_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/lottery_history", f"{self.current_pool_name}.json"
             )
             with open_file(lottery_file, "r", encoding="utf-8") as f:
@@ -665,7 +665,7 @@ class lottery_history_table(GroupHeaderCardWidget):
 
     def setup_file_watcher(self):
         """设置文件系统监视器，监控奖池历史记录文件夹的变化"""
-        lottery_history_dir = get_path("app/resources/history/lottery_history")
+        lottery_history_dir = get_data_path("history/lottery_history")
         if not lottery_history_dir.exists():
             logger.warning(f"奖池历史记录文件夹不存在: {lottery_history_dir}")
             return

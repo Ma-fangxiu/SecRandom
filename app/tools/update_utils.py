@@ -418,7 +418,7 @@ async def download_update_async(
         file_name = file_name.replace("[struct]", struct)
 
         # 确定下载保存路径
-        download_dir = get_resources_path("downloads")
+        download_dir = get_data_path("downloads")
         ensure_dir(download_dir)
         file_path = download_dir / file_name
 

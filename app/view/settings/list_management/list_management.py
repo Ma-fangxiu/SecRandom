@@ -353,7 +353,7 @@ class roll_call_list(GroupHeaderCardWidget):
 
     def setup_file_watcher(self):
         """设置文件系统监视器，监控班级名单文件夹的变化"""
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
+        roll_call_list_dir = get_data_path("list/roll_call_list")
 
         # 确保目录存在
         if not roll_call_list_dir.exists():
@@ -688,7 +688,7 @@ class lottery_list(GroupHeaderCardWidget):
     def setup_file_watcher(self):
         """设置文件系统监视器，监控奖池名单文件夹的变化"""
         # 获取奖池名单文件夹路径
-        lottery_list_dir = get_path("app/resources/list/lottery_list")
+        lottery_list_dir = get_data_path("list/lottery_list")
 
         # 确保目录存在
         if not lottery_list_dir.exists():

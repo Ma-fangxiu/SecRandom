@@ -643,7 +643,7 @@ class ImportStudentNameWindow(QWidget):
     def __save_student_data(self, class_name: str, student_data: List[Dict[str, Any]]):
         """保存学生数据到班级名单文件"""
         # 确保班级名单目录存在
-        roll_call_list_dir = get_path("app/resources/list/roll_call_list")
+        roll_call_list_dir = get_data_path("data", "roll_call_list")
         roll_call_list_dir.mkdir(parents=True, exist_ok=True)
 
         # 创建班级名单文件路径

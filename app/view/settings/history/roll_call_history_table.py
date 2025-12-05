@@ -317,10 +317,10 @@ class roll_call_history_table(GroupHeaderCardWidget):
         if not self.current_class_name:
             return
         try:
-            student_file = get_resources_path(
+            student_file = get_data_path(
                 "list/roll_call_list", f"{self.current_class_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/roll_call_history", f"{self.current_class_name}.json"
             )
             with open_file(student_file, "r", encoding="utf-8") as f:
@@ -493,10 +493,10 @@ class roll_call_history_table(GroupHeaderCardWidget):
         if not self.current_class_name:
             return
         try:
-            student_file = get_resources_path(
+            student_file = get_data_path(
                 "list/roll_call_list", f"{self.current_class_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/roll_call_history", f"{self.current_class_name}.json"
             )
             with open_file(student_file, "r", encoding="utf-8") as f:
@@ -627,10 +627,10 @@ class roll_call_history_table(GroupHeaderCardWidget):
         if not self.current_class_name:
             return
         try:
-            student_file = get_resources_path(
+            student_file = get_data_path(
                 "list/roll_call_list", f"{self.current_class_name}.json"
             )
-            history_file = get_resources_path(
+            history_file = get_data_path(
                 "history/roll_call_history", f"{self.current_class_name}.json"
             )
             with open_file(student_file, "r", encoding="utf-8") as f:
@@ -760,7 +760,7 @@ class roll_call_history_table(GroupHeaderCardWidget):
 
     def setup_file_watcher(self):
         """设置文件系统监视器，监控班级历史记录文件夹的变化"""
-        roll_call_history_dir = get_path("app/resources/history/roll_call_history")
+        roll_call_history_dir = get_data_path("history/roll_call_history")
         if not roll_call_history_dir.exists():
             logger.warning(f"班级历史记录文件夹不存在: {roll_call_history_dir}")
             return
