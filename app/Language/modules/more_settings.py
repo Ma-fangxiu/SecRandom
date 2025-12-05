@@ -5,6 +5,12 @@ more_settings = {
     }
 }
 
+settings = {
+    "ZH_CN": {
+        "title": {"name": "设置", "description": "设置窗口"},
+    }
+}
+
 # 调试设置语言配置
 debug = {"ZH_CN": {"title": {"name": "调试设置", "description": "调试功能设置"}}}
 

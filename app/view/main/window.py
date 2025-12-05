@@ -230,7 +230,7 @@ class MainWindow(MSFluentWindow):
         settings_item = self.addSubInterface(
             self.settingsInterface,
             get_theme_icon("ic_fluent_settings_20_filled"),
-            "设置",
+            get_content_name_async("settings", "title"),
             position=settings_position,
         )
         settings_item.clicked.connect(
