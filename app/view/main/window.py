@@ -355,6 +355,11 @@ class MainWindow(MSFluentWindow):
                 text,
             )
 
+        from app.tools.button_draw_utils import centered_draw_background
+
+        button._drawBackground = lambda painter: centered_draw_background(
+            button, painter, button_size
+        )
         button._drawIcon = centered_draw_icon
         button._drawText = wrapped_draw_text
 

@@ -141,9 +141,12 @@ class Lottery(QWidget):
         self.count_widget = QWidget()
         horizontal_layout = QHBoxLayout()
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        horizontal_layout.addWidget(self.minus_button, 0, Qt.AlignmentFlag.AlignLeft)
-        horizontal_layout.addWidget(self.count_label, 0, Qt.AlignmentFlag.AlignLeft)
-        horizontal_layout.addWidget(self.plus_button, 0, Qt.AlignmentFlag.AlignLeft)
+        horizontal_layout.setSpacing(0)
+        horizontal_layout.addWidget(self.minus_button)
+        horizontal_layout.addStretch()
+        horizontal_layout.addWidget(self.count_label)
+        horizontal_layout.addStretch()
+        horizontal_layout.addWidget(self.plus_button)
         self.count_widget.setLayout(horizontal_layout)
 
         self.start_button = PrimaryPushButton(
@@ -309,6 +312,7 @@ class Lottery(QWidget):
             # 收集所有需要调整宽度的控件
             widgets_to_adjust = [
                 self.reset_button,
+                self.count_widget,
                 self.start_button,
                 self.pool_list_combobox,
                 self.list_combobox,
