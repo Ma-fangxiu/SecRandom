@@ -895,7 +895,7 @@ class Lottery(QWidget):
     def setup_file_watcher(self):
         """设置文件监控器，监控名单文件夹的变化"""
         try:
-            list_dir = get_data_path("data", "lottery_list")
+            list_dir = get_data_path("list", "lottery_list")
 
             if not list_dir.exists():
                 list_dir.mkdir(parents=True, exist_ok=True)

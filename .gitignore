@@ -190,3 +190,4 @@ cython_debug/
 /scripts/*.json
 /data/history
 /data/list
+/data/audio

@@ -155,19 +155,19 @@ class roll_call_list(GroupHeaderCardWidget):
         create_set_class_name_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "class_name_setting",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "class_name_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -178,19 +178,19 @@ class roll_call_list(GroupHeaderCardWidget):
         create_import_student_name_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "import_student_name",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "import_student_name",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -201,15 +201,15 @@ class roll_call_list(GroupHeaderCardWidget):
         create_name_setting_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management", "notification", "roll_call", "name_setting", "title"
+            title=get_any_position_value_async(
+                "notification", "roll_call", "name_setting", "title", "name"
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "name_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -220,19 +220,19 @@ class roll_call_list(GroupHeaderCardWidget):
         create_gender_setting_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "gender_setting",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "gender_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -243,15 +243,15 @@ class roll_call_list(GroupHeaderCardWidget):
         create_group_setting_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management", "notification", "roll_call", "group_setting", "title"
+            title=get_any_position_value_async(
+                "notification", "roll_call", "group_setting", "title", "name"
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "roll_call",
                 "group_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -269,20 +269,20 @@ class roll_call_list(GroupHeaderCardWidget):
 
         file_path, selected_filter = QFileDialog.getSaveFileName(
             self,
-            get_content_name_async(
-                "list_management",
+            get_any_position_value_async(
                 "qfiledialog",
                 "roll_call",
                 "export_student_list",
                 "caption",
+                "name",
             ),
             f"{class_name}_学生名单-SecRandom",
-            get_content_name_async(
-                "list_management",
+            get_any_position_value_async(
                 "qfiledialog",
                 "roll_call",
                 "export_student_list",
                 "filter",
+                "name",
             ),
         )
 
@@ -308,16 +308,14 @@ class roll_call_list(GroupHeaderCardWidget):
 
         if success:
             config = NotificationConfig(
-                title=get_content_name_async(
-                    "list_management",
+                title=get_any_position_value_async(
                     "notification",
                     "roll_call",
                     "export",
                     "title",
                     "success",
                 ),
-                content=get_content_name_async(
-                    "list_management",
+                content=get_any_position_value_async(
                     "notification",
                     "roll_call",
                     "export",
@@ -330,16 +328,14 @@ class roll_call_list(GroupHeaderCardWidget):
             logger.info(f"学生名单导出成功: {file_path}")
         else:
             config = NotificationConfig(
-                title=get_content_name_async(
-                    "list_management",
+                title=get_any_position_value_async(
                     "notification",
                     "roll_call",
                     "export",
                     "title",
                     "failure",
                 ),
-                content=get_content_name_async(
-                    "list_management",
+                content=get_any_position_value_async(
                     "notification",
                     "roll_call",
                     "export",
@@ -512,19 +508,19 @@ class lottery_list(GroupHeaderCardWidget):
         create_set_pool_name_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "pool_name_setting",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "pool_name_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -535,19 +531,19 @@ class lottery_list(GroupHeaderCardWidget):
         create_import_prize_name_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "import_prize_name",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "import_prize_name",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -558,11 +554,15 @@ class lottery_list(GroupHeaderCardWidget):
         create_prize_setting_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management", "notification", "lottery", "prize_setting", "title"
+            title=get_any_position_value_async(
+                "notification", "lottery", "prize_setting", "title", "name"
             ),
-            content=get_content_name_async(
-                "list_management", "notification", "lottery", "prize_setting", "content"
+            content=get_any_position_value_async(
+                "notification",
+                "lottery",
+                "prize_setting",
+                "content",
+                "name",
             ),
             duration=3000,
         )
@@ -573,19 +573,19 @@ class lottery_list(GroupHeaderCardWidget):
         create_prize_weight_setting_window()
         # 显示通知
         config = NotificationConfig(
-            title=get_content_name_async(
-                "list_management",
+            title=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "prize_weight_setting",
                 "title",
+                "name",
             ),
-            content=get_content_name_async(
-                "list_management",
+            content=get_any_position_value_async(
                 "notification",
                 "lottery",
                 "prize_weight_setting",
                 "content",
+                "name",
             ),
             duration=3000,
         )
@@ -603,20 +603,20 @@ class lottery_list(GroupHeaderCardWidget):
 
         file_path, selected_filter = QFileDialog.getSaveFileName(
             self,
-            get_content_name_async(
-                "list_management",
+            get_any_position_value_async(
                 "qfiledialog",
                 "lottery",
                 "export_prize_name",
                 "caption",
+                "name",
             ),
             f"{pool_name}_奖品名单-SecRandom",
-            get_content_name_async(
-                "list_management",
+            get_any_position_value_async(
                 "qfiledialog",
                 "lottery",
                 "export_prize_name",
                 "filter",
+                "name",
             ),
         )
 
@@ -638,25 +638,25 @@ class lottery_list(GroupHeaderCardWidget):
         elif export_type == "txt" and not file_path.endswith(".txt"):
             file_path += ".txt"
 
-        success, message = export_student_data(class_name, file_path, export_type)
+        success, message = export_prize_data(pool_name, file_path, export_type)
 
         if success:
             config = NotificationConfig(
-                title=get_content_name_async(
-                    "list_management",
+                title=get_any_position_value_async(
                     "notification",
                     "lottery",
                     "export",
                     "title",
                     "success",
+                    "name",
                 ),
-                content=get_content_name_async(
-                    "list_management",
+                content=get_any_position_value_async(
                     "notification",
                     "lottery",
                     "export",
                     "content",
                     "success",
+                    "name",
                 ).format(path=file_path),
                 duration=3000,
             )
@@ -664,21 +664,21 @@ class lottery_list(GroupHeaderCardWidget):
             logger.info(f"奖品名单导出成功: {file_path}")
         else:
             config = NotificationConfig(
-                title=get_content_name_async(
-                    "list_management",
+                title=get_any_position_value_async(
                     "notification",
                     "lottery",
                     "export",
                     "title",
                     "failure",
+                    "name",
                 ),
-                content=get_content_name_async(
-                    "list_management",
+                content=get_any_position_value_async(
                     "notification",
                     "lottery",
                     "export",
                     "content",
                     "error",
+                    "name",
                 ).format(message=message),
                 duration=3000,
             )

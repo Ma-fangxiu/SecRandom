@@ -99,7 +99,7 @@ class NameSettingWindow(QWidget):
         """加载现有姓名"""
         try:
             # 获取班级名单目录
-            roll_call_list_dir = get_data_path("list/roll_call_list")
+            roll_call_list_dir = get_data_path("list", "roll_call_list")
 
             # 从设置中获取班级名称
             class_name = readme_settings_async("roll_call_list", "select_class_name")

@@ -225,7 +225,7 @@ class SetPoolNameWindow(QWidget):
                 return
 
             # 获取奖池名单目录
-            lottery_list_dir = get_data_path("data", "lottery_list")
+            lottery_list_dir = get_data_path("list", "lottery_list")
             lottery_list_dir.mkdir(parents=True, exist_ok=True)
 
             # 获取现有的奖池名称
