@@ -87,6 +87,25 @@ class basic_settings_function(GroupHeaderCardWidget):
         )
         self.autostart_switch.checkedChanged.connect(self.__on_autostart_changed)
 
+        # 启动显示主窗口设置
+        self.show_startup_window_switch = SwitchButton()
+        self.show_startup_window_switch.setOffText(
+            get_content_switchbutton_name_async(
+                "basic_settings", "show_startup_window", "disable"
+            )
+        )
+        self.show_startup_window_switch.setOnText(
+            get_content_switchbutton_name_async(
+                "basic_settings", "show_startup_window", "enable"
+            )
+        )
+        self.show_startup_window_switch.setChecked(
+            readme_settings_async("basic_settings", "show_startup_window")
+        )
+        self.show_startup_window_switch.checkedChanged.connect(
+            self.__on_show_startup_window_changed
+        )
+
         # 后台驻留设置
         self.resident_switch = SwitchButton()
         self.resident_switch.setOffText(
@@ -132,6 +151,12 @@ class basic_settings_function(GroupHeaderCardWidget):
             self.autostart_switch,
         )
         self.addGroup(
+            get_theme_icon("ic_fluent_window_20_filled"),
+            get_content_name_async("basic_settings", "show_startup_window"),
+            get_content_description_async("basic_settings", "show_startup_window"),
+            self.show_startup_window_switch,
+        )
+        self.addGroup(
             get_theme_icon("ic_fluent_resize_20_filled"),
             get_content_name_async("basic_settings", "background_resident"),
             get_content_description_async("basic_settings", "background_resident"),
@@ -172,6 +197,35 @@ class basic_settings_function(GroupHeaderCardWidget):
                 NotificationConfig(
                     title=get_content_name_async("basic_settings", "autostart"),
                     content="设置开机自启失败",
+                ),
+                parent=self.window(),
+            )
+
+    def __on_show_startup_window_changed(self, checked):
+        update_settings("basic_settings", "show_startup_window", checked)
+        if checked:
+            show_notification(
+                NotificationType.SUCCESS,
+                NotificationConfig(
+                    title=get_content_name_async(
+                        "basic_settings", "show_startup_window"
+                    ),
+                    content=get_content_name_async(
+                        "basic_settings", "success_enable_content"
+                    ),
+                ),
+                parent=self.window(),
+            )
+        else:
+            show_notification(
+                NotificationType.INFO,
+                NotificationConfig(
+                    title=get_content_name_async(
+                        "basic_settings", "show_startup_window"
+                    ),
+                    content=get_content_name_async(
+                        "basic_settings", "info_disable_content"
+                    ),
                 ),
                 parent=self.window(),
             )

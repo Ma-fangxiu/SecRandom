@@ -273,7 +273,13 @@ def start_main_window():
         )
         main_window.showSettingsRequestedAbout.connect(show_settings_window_about)
         main_window.showFloatWindowRequested.connect(show_float_window)
-        main_window.show()
+
+        # 根据设置决定是否启动时显示主窗口
+        show_startup_window = readme_settings_async(
+            "basic_settings", "show_startup_window"
+        )
+        if show_startup_window:
+            main_window.show()
 
         # 连接 URLHandler 信号到 main_window 信号处理器
         global url_handler

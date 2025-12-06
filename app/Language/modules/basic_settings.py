@@ -13,6 +13,11 @@ basic_settings = {
             "description": "设置软件是否随系统启动自动运行",
             "switchbutton_name": {"enable": "", "disable": ""},
         },
+        "show_startup_window": {
+            "name": "启动显示主窗口",
+            "description": "设置软件启动时是否自动显示主窗口",
+            "switchbutton_name": {"enable": "", "disable": ""},
+        },
         "background_resident": {
             "name": "后台驻留",
             "description": "关闭所有窗口后是否仍在后台常驻",
@@ -92,6 +97,8 @@ basic_settings = {
             "import_failure_title": {"name": "导入设置"},
             "import_failure_content": {"name": "导入设置失败:\n{error}"},
         },
+        "success_enable_content": {"name": "已开启启动显示主窗口"},
+        "info_disable_content": {"name": "已关闭启动显示主窗口"},
         "data_import_export": {
             "export_success_title": {"name": "导出所有数据"},
             "export_success_content": {"name": "所有数据已成功导出到:\n{path}"},
@@ -158,13 +165,13 @@ basic_settings = {
             "name": "Start on boot",
             "description": "Set whether the software is running automatically with the system",
         },
+        "show_startup_window": {
+            "name": "Show main window on startup",
+            "description": "Set whether to automatically display the main window when the software starts",
+        },
         "check_update": {
             "name": "Check for updates on startup",
             "description": "Set whether new versions will be checked automatically on boot",
-        },
-        "show_startup_window": {
-            "name": "Show splash screen",
-            "description": "Set whether to show the splash screen on boot",
         },
         "export_diagnostic_data": {
             "name": "Export diagnostic data",
@@ -286,6 +293,10 @@ basic_settings = {
             "import_failure_content": {
                 "name": "导入设置失败:\n{error}",
             },
+        },
+        "show_startup_window_notification": {
+            "success_enable_content": {"name": "Startup main window display enabled"},
+            "info_disable_content": {"name": "Startup main window display disabled"},
         },
         "data_import_export": {
             "export_success_title": {

@@ -30,6 +30,7 @@ DEFAULT_SETTINGS = {
         "data_management": {"default_value": None},
         "personalised": {"default_value": None},
         "autostart": {"default_value": False},
+        "show_startup_window": {"default_value": True},
         "background_resident": {"default_value": True},
         "url_protocol": {"default_value": False},
         "export_diagnostic_data": {"default_value": None},
