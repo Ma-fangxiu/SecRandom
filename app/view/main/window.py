@@ -9,7 +9,7 @@ from loguru import logger
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QTimer, QEvent, Signal
-from qfluentwidgets import MSFluentWindow, NavigationItemPosition
+from qfluentwidgets import FluentWindow, NavigationItemPosition
 
 from app.tools.variable import MINIMUM_WINDOW_SIZE, APP_INIT_DELAY
 from app.tools.path_utils import get_data_path
@@ -31,7 +31,7 @@ from app.common.IPC_URL.url_command_handler import URLCommandHandler
 # ==================================================
 # 主窗口类
 # ==================================================
-class MainWindow(MSFluentWindow):
+class MainWindow(FluentWindow):
     """主窗口类
     程序的核心控制中心"""
 
@@ -242,190 +242,27 @@ class MainWindow(MSFluentWindow):
         )
         settings_item.clicked.connect(lambda: self.switchTo(self.roll_call_page))
 
-        # 调整侧边栏宽度以适应多语言文本
-        self._adjustNavigationBarWidth()
+        # 配置导航栏为可折叠模式
+        self._setupCollapsibleNavigation()
 
-    def _adjustNavigationBarWidth(self):
-        """调整导航栏宽度以适应多语言文本，按钮保持正方形，长文本换行"""
-        from PySide6.QtCore import Qt, QRect
-        from PySide6.QtGui import QFontMetrics
-        from app.tools.language_manager import get_current_language
-
+    def _setupCollapsibleNavigation(self):
+        """配置可折叠的导航栏
+        默认折叠只显示图标，点击汉堡菜单展开显示完整文本"""
         try:
             nav = self.navigationInterface
-            if not nav or not hasattr(nav, "buttons"):
+            if not nav:
                 return
 
-            buttons = nav.buttons()
-            if not buttons:
-                return
+            # 设置导航栏展开宽度（展开时显示图标+文本）
+            nav.setExpandWidth(200)
+            nav.setMinimumExpandWidth(200)
 
-            # 获取当前语言
-            current_lang = get_current_language().lower()
-
-            # 判断是否是 CJK 语言（中日韩文字通常更紧凑）
-            is_cjk = current_lang.startswith(("zh", "ja", "ko"))
-
-            # 基础尺寸参数 - 根据语言类型调整
-            if is_cjk:
-                min_button_size = 70  # CJK 语言最小按钮尺寸
-                max_button_size = 90  # CJK 语言最大按钮尺寸
-            else:
-                min_button_size = 80  # 拉丁语言最小按钮尺寸
-                max_button_size = 110  # 拉丁语言最大按钮尺寸
-
-            icon_size = 20
-            spacing = 4  # 图标和文本间距
-            text_padding = 8  # 文本区域左右边距
-            max_text_lines = 3  # 最大文本行数
-
-            # 计算所需的按钮尺寸
-            calculated_size = min_button_size
-
-            for button in buttons:
-                text = button.text()
-                if not text:
-                    continue
-
-                fm = QFontMetrics(button.font())
-                line_height = fm.height()
-
-                # 计算不同按钮尺寸下的文本换行情况
-                for test_size in range(min_button_size, max_button_size + 1, 5):
-                    text_width = test_size - text_padding
-                    text_rect = QRect(0, 0, text_width, 1000)
-                    bounding = fm.boundingRect(
-                        text_rect, Qt.AlignHCenter | Qt.TextWordWrap, text
-                    )
-                    text_height = bounding.height()
-                    num_lines = max(1, round(text_height / line_height))
-
-                    # 计算内容总高度
-                    total_content_height = icon_size + spacing + text_height
-
-                    # 如果内容可以在按钮内显示，且行数不超过限制
-                    if (
-                        total_content_height <= test_size - 8
-                        and num_lines <= max_text_lines
-                    ):
-                        if test_size > calculated_size:
-                            calculated_size = test_size
-                        break
-                else:
-                    # 如果所有尺寸都不够，使用最大尺寸
-                    calculated_size = max_button_size
-
-            # 应用计算出的按钮尺寸
-            button_size = min(calculated_size, max_button_size)
-
-            for button in buttons:
-                button.setFixedSize(button_size, button_size)
-                # 设置工具提示，显示完整文本
-                button.setToolTip(button.text())
-                # 重写绘制方法使图标和文本整体居中
-                self._patchButtonDraw(button, button_size)
-
-            # 设置导航栏宽度
-            nav_padding = 8
-            nav_width = button_size + nav_padding
-            nav.setFixedWidth(nav_width)
+            # 默认折叠导航栏（只显示图标）
+            if hasattr(nav, "panel") and nav.panel:
+                nav.panel.collapse()
 
         except Exception as e:
-            logger.debug(f"调整导航栏宽度时出错: {e}")
-
-    def _patchButtonDraw(self, button, button_size):
-        """修补按钮的绘制方法，使图标和文本整体垂直居中"""
-        from PySide6.QtCore import QRectF, Qt, QRect
-        from PySide6.QtGui import QPainter, QFontMetrics
-        from qfluentwidgets.common.icon import drawIcon, FluentIconBase
-        from qfluentwidgets.common.color import autoFallbackThemeColor
-        from qfluentwidgets.common.config import isDarkTheme
-
-        def centered_draw_icon(painter: QPainter):
-            if (button.isPressed or not button.isEnter) and not button.isSelected:
-                painter.setOpacity(0.6)
-            if not button.isEnabled():
-                painter.setOpacity(0.4)
-
-            # 计算文本需要的行数和高度
-            text = button.text()
-            fm = QFontMetrics(button.font())
-            text_width = button_size - 8  # 文本区域宽度
-
-            # 计算文本换行后的高度
-            text_rect = QRect(0, 0, text_width, 1000)
-            bounding = fm.boundingRect(
-                text_rect, Qt.AlignHCenter | Qt.TextWordWrap, text
-            )
-            text_height = bounding.height()
-
-            # 计算整体内容高度（图标 + 间距 + 文本）
-            icon_size = 20
-            spacing = 4  # 图标和文本之间的间距
-            total_height = icon_size + spacing + text_height
-
-            # 计算垂直居中的起始位置
-            start_y = (button_size - total_height) / 2
-            icon_x = (button_size - icon_size) / 2
-            icon_y = start_y
-
-            if hasattr(button, "iconAni") and not button._isSelectedTextVisible:
-                icon_y += button.iconAni.offset
-
-            # 保存计算结果供 _drawText 使用
-            button._calculated_text_top = start_y + icon_size + spacing
-
-            rect = QRectF(icon_x, icon_y, icon_size, icon_size)
-
-            selectedIcon = button._selectedIcon or button._icon
-
-            if isinstance(selectedIcon, FluentIconBase) and button.isSelected:
-                color = autoFallbackThemeColor(
-                    button.lightSelectedColor, button.darkSelectedColor
-                )
-                selectedIcon.render(painter, rect, fill=color.name())
-            elif button.isSelected:
-                drawIcon(selectedIcon, painter, rect)
-            else:
-                drawIcon(button._icon, painter, rect)
-
-        def wrapped_draw_text(painter: QPainter):
-            if button.isSelected and not button._isSelectedTextVisible:
-                return
-
-            if button.isSelected:
-                painter.setPen(
-                    autoFallbackThemeColor(
-                        button.lightSelectedColor, button.darkSelectedColor
-                    )
-                )
-            else:
-                painter.setPen(Qt.white if isDarkTheme() else Qt.black)
-
-            painter.setFont(button.font())
-
-            text = button.text()
-
-            # 使用之前计算的文本顶部位置
-            text_top = getattr(button, "_calculated_text_top", 36)
-            text_rect = QRect(
-                4, int(text_top), button_size - 8, button_size - int(text_top)
-            )
-
-            # 使用 Qt 的自动换行功能
-            painter.drawText(
-                text_rect,
-                Qt.AlignHCenter | Qt.AlignTop | Qt.TextWordWrap,
-                text,
-            )
-
-        from app.tools.button_draw_utils import centered_draw_background
-
-        button._drawBackground = lambda painter: centered_draw_background(
-            button, painter, button_size
-        )
-        button._drawIcon = centered_draw_icon
-        button._drawText = wrapped_draw_text
+            logger.debug(f"配置可折叠导航栏时出错: {e}")
 
     def _toggle_float_window(self):
         if self.float_window.isVisible():
