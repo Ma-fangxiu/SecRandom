@@ -420,6 +420,9 @@ class MainWindow(FluentWindow):
                 "animation_interval": readme_settings_async(
                     "quick_draw_settings", "animation_interval"
                 ),
+                "autoplay_count": readme_settings_async(
+                    "quick_draw_settings", "autoplay_count"
+                ),
                 "animation_color_theme": readme_settings_async(
                     "quick_draw_settings", "animation_color_theme"
                 ),
@@ -431,25 +434,59 @@ class MainWindow(FluentWindow):
                 ),
             }
 
-            # 保存当前的half_repeat设置
+            # 保存当前的设置
             original_half_repeat = readme_settings_async(
                 "roll_call_settings", "half_repeat"
             )
+            original_animation = readme_settings_async(
+                "roll_call_settings", "animation"
+            )
+            original_animation_interval = readme_settings_async(
+                "roll_call_settings", "animation_interval"
+            )
+            original_autoplay_count = readme_settings_async(
+                "roll_call_settings", "autoplay_count"
+            )
 
             try:
-                # 设置闪抽专用的half_repeat设置
+                # 设置闪抽专用的设置
                 update_settings(
                     "roll_call_settings",
                     "half_repeat",
                     quick_draw_settings["half_repeat"],
                 )
+                update_settings(
+                    "roll_call_settings",
+                    "animation",
+                    quick_draw_settings["animation"],
+                )
+                update_settings(
+                    "roll_call_settings",
+                    "animation_interval",
+                    quick_draw_settings["animation_interval"],
+                )
+                # 使用闪抽的自动播放次数设置
+                update_settings(
+                    "roll_call_settings",
+                    "autoplay_count",
+                    quick_draw_settings["autoplay_count"],
+                )
 
                 # 调用抽取逻辑
                 roll_call_widget.draw_random()
             finally:
-                # 恢复原始的half_repeat设置
+                # 恢复原始的设置
                 update_settings(
                     "roll_call_settings", "half_repeat", original_half_repeat
+                )
+                update_settings("roll_call_settings", "animation", original_animation)
+                update_settings(
+                    "roll_call_settings",
+                    "animation_interval",
+                    original_animation_interval,
+                )
+                update_settings(
+                    "roll_call_settings", "autoplay_count", original_autoplay_count
                 )
 
             # 处理抽取结果
