@@ -77,6 +77,10 @@ floating_window_management = {
             "description": "设置浮窗贴边时显示样式",
             "combo_items": ["图标", "文字", "箭头"],
         },
+        "floating_window_stick_to_edge_arrow_text": {
+            "name": "抽",
+            "description": "设置浮窗贴边时箭头按钮显示的文字",
+        },
     },
     "EN_US": {
         "title": {
@@ -164,6 +168,10 @@ floating_window_management = {
                 "1": "Text",
                 "2": "Arrow",
             },
+        },
+        "floating_window_stick_to_edge_arrow_text": {
+            "name": "Draw",
+            "description": "Set the text displayed on the arrow button when the floating window is docked",
         },
         "floating_window_draggable": {
             "name": "Floating window draggable",

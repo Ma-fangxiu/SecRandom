@@ -1,11 +1,15 @@
+# 标准库导入
+from typing import Dict, Any
+
+# 第三方库导入
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from PySide6.QtNetwork import *
 from qfluentwidgets import *
-
 from loguru import logger
 
+# 本地模块导入
 from app.tools.personalised import load_custom_font, get_theme_icon, is_dark_theme
 from app.tools.settings_access import (
     readme_settings_async,
@@ -17,6 +21,12 @@ from app.Language.obtain_language import get_content_combo_name_async
 
 
 class LevitationWindow(QWidget):
+    """
+    悬浮窗窗口类
+    提供可拖拽、贴边隐藏、主题切换等功能的悬浮窗口
+    """
+
+    # ==================== 信号定义 ====================
     rollCallRequested = Signal()
     quickDrawRequested = Signal()
     instantDrawRequested = Signal()
@@ -25,52 +35,106 @@ class LevitationWindow(QWidget):
     visibilityChanged = Signal(bool)
     positionChanged = Signal(int, int)
 
+    # ==================== 类常量 ====================
+    DEFAULT_OPACITY = 0.8
+    DEFAULT_PLACEMENT = 0
+    DEFAULT_DISPLAY_STYLE = 0
+    DEFAULT_EDGE_THRESHOLD = 5
+    DEFAULT_RETRACT_SECONDS = 5
+    DEFAULT_LONG_PRESS_MS = 500
+    DEFAULT_BUTTON_SIZE = QSize(60, 60)
+    DEFAULT_ICON_SIZE = QSize(24, 24)
+    DEFAULT_SPACING = 6
+    DEFAULT_MARGINS = 6  # 贴边隐藏时的最小间距
+    DRAG_THRESHOLD = 3  # 拖拽触发阈值
+
     def __init__(self, parent=None):
+        """初始化悬浮窗窗口"""
         super().__init__(parent)
+
+        # ==================== 基础设置 ====================
+        self._setup_window_properties()
+
+        # ==================== 拖拽相关属性 ====================
+        self._init_drag_properties()
+
+        # ==================== 贴边隐藏属性 ====================
+        self._init_edge_properties()
+
+        # ==================== UI相关属性 ====================
+        self._init_ui_properties()
+
+        # ==================== 初始化配置 ====================
+        self._init_settings()
+
+        # ==================== 构建UI ====================
+        self._build_ui()
+        self._apply_window()
+        self._apply_position()
+        self._install_drag_filters()
+
+        # ==================== 信号连接 ====================
+        self._connect_signals()
+
+        # ==================== 主题应用 ====================
+        self._apply_theme_style()
+
+    # ==================== 初始化方法 ====================
+
+    def _setup_window_properties(self):
+        """设置窗口基础属性"""
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setWindowFlags(
             Qt.FramelessWindowHint
             | Qt.WindowStaysOnTopHint
             | Qt.Tool
             | Qt.NoDropShadowWindowHint
+            | Qt.NoFocus
         )
+
+    def _init_drag_properties(self):
+        """初始化拖拽相关属性"""
         self._shadow = None
         self._drag_timer = QTimer(self)
         self._drag_timer.setSingleShot(True)
         self._drag_timer.timeout.connect(self._begin_drag)
         self._dragging = False
         self._press_pos = QPoint()
+        self._draggable = True
+
+    def _init_edge_properties(self):
+        """初始化贴边隐藏相关属性"""
         self._indicator = None
         self._retract_timer = QTimer(self)
         self._retract_timer.setSingleShot(True)
         self._retracted = False
         self._last_stuck = False
-        self._edge_threshold = 5
-        self._placement = 0
-        self._display_style = 0
+        self._edge_threshold = self.DEFAULT_EDGE_THRESHOLD
         self._stick_to_edge = True
-        self._retract_seconds = 5
-        self._long_press_ms = 500
+        self._retract_seconds = self.DEFAULT_RETRACT_SECONDS
+        self._long_press_ms = self.DEFAULT_LONG_PRESS_MS
+
+    def _init_ui_properties(self):
+        """初始化UI相关属性"""
         self._buttons_spec = []
         self._font_family = load_custom_font() or QFont().family()
         self._container = QWidget(self)
         self._layout = None
-        self._btn_size = QSize(60, 60)
-        self._icon_size = QSize(24, 24)
-        self._spacing = 6
-        self._margins = 6
-        self._init_settings()
-        self._build_ui()
-        self._apply_window()
-        self._apply_position()
-        self._install_drag_filters()
+        self._btn_size = self.DEFAULT_BUTTON_SIZE
+        self._icon_size = self.DEFAULT_ICON_SIZE
+        self._spacing = self.DEFAULT_SPACING
+        self._margins = self.DEFAULT_MARGINS
+        self._placement = self.DEFAULT_PLACEMENT
+        self._display_style = self.DEFAULT_DISPLAY_STYLE
+
+    def _connect_signals(self):
+        """连接信号"""
         get_settings_signals().settingChanged.connect(self._on_setting_changed)
         # 连接主题变更信号
         try:
             qconfig.themeChanged.connect(self._on_theme_changed)
         except Exception as e:
             logger.exception("连接 themeChanged 信号时出错（已忽略）: {}", e)
-        self._apply_theme_style()
 
     def rebuild_ui(self):
         """
@@ -159,93 +223,87 @@ class LevitationWindow(QWidget):
         return qicon.pixmap(self._icon_size)
 
     def _init_settings(self):
-        self._visible_on_start = bool(
-            readme_settings_async(
-                "floating_window_management", "startup_display_floating_window"
-            )
+        """初始化设置配置"""
+        # 基础显示设置
+        self._visible_on_start = self._get_bool_setting(
+            "floating_window_management", "startup_display_floating_window", False
         )
-        self._opacity = float(
-            readme_settings_async(
-                "floating_window_management", "floating_window_opacity"
-            )
-            or 0.8
+        self._opacity = self._get_float_setting(
+            "floating_window_management",
+            "floating_window_opacity",
+            self.DEFAULT_OPACITY,
         )
-        self._placement = int(
-            readme_settings_async(
-                "floating_window_management", "floating_window_placement"
-            )
-            or 0
+
+        # 布局设置
+        self._placement = self._get_int_setting(
+            "floating_window_management",
+            "floating_window_placement",
+            self.DEFAULT_PLACEMENT,
         )
-        self._display_style = int(
-            readme_settings_async(
-                "floating_window_management", "floating_window_display_style"
-            )
-            or 0
+        self._display_style = self._get_int_setting(
+            "floating_window_management",
+            "floating_window_display_style",
+            self.DEFAULT_DISPLAY_STYLE,
         )
-        self._stick_to_edge = bool(
-            readme_settings_async(
-                "floating_window_management", "floating_window_stick_to_edge"
-            )
+
+        # 拖拽设置
+        self._draggable = self._get_bool_setting(
+            "floating_window_management", "floating_window_draggable", True
         )
-        self._retract_seconds = int(
-            readme_settings_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_recover_seconds",
-            )
-            or 0
+        self._long_press_ms = self._get_int_setting(
+            "floating_window_management",
+            "floating_window_long_press_duration",
+            self.DEFAULT_LONG_PRESS_MS,
         )
-        self._long_press_ms = int(
-            readme_settings_async(
-                "floating_window_management", "floating_window_long_press_duration"
-            )
-            or 500
+
+        # 贴边设置
+        self._stick_to_edge = self._get_bool_setting(
+            "floating_window_management", "floating_window_stick_to_edge", True
         )
-        self._draggable = bool(
-            readme_settings_async(
-                "floating_window_management", "floating_window_draggable"
-            )
-            or True
+        self._retract_seconds = self._get_int_setting(
+            "floating_window_management",
+            "floating_window_stick_to_edge_recover_seconds",
+            self.DEFAULT_RETRACT_SECONDS,
         )
-        self._stick_indicator_style = int(
-            readme_settings_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_display_style",
-            )
-            or 0
+        self._stick_indicator_style = self._get_int_setting(
+            "floating_window_management",
+            "floating_window_stick_to_edge_display_style",
+            0,
         )
-        idx = int(
-            readme_settings_async(
-                "floating_window_management", "floating_window_button_control"
-            )
-            or 0
+
+        # 按钮配置
+        button_control_idx = self._get_int_setting(
+            "floating_window_management", "floating_window_button_control", 0
         )
-        self._buttons_spec = self._map_button_control(idx)
-        # 贴边隐藏功能配置 - 与现有贴边设置保持一致
-        self.floating_window_stick_to_edge = bool(
-            readme_settings_async(
-                "floating_window_management", "floating_window_stick_to_edge"
-            )
-            or False
+        self._buttons_spec = self._map_button_control(button_control_idx)
+
+        # 贴边隐藏功能配置
+        self._init_edge_hide_settings()
+
+    def _get_bool_setting(self, section: str, key: str, default: bool = False) -> bool:
+        """获取布尔类型设置"""
+        return bool(readme_settings_async(section, key) or default)
+
+    def _get_int_setting(self, section: str, key: str, default: int = 0) -> int:
+        """获取整数类型设置"""
+        return int(readme_settings_async(section, key) or default)
+
+    def _get_float_setting(self, section: str, key: str, default: float = 0.0) -> float:
+        """获取浮点数类型设置"""
+        return float(readme_settings_async(section, key) or default)
+
+    def _init_edge_hide_settings(self):
+        """初始化贴边隐藏功能设置"""
+        self.floating_window_stick_to_edge = self._get_bool_setting(
+            "floating_window_management", "floating_window_stick_to_edge", False
         )
-        logger.debug(f"贴边隐藏功能配置: {self.floating_window_stick_to_edge}")
-        # 复用现有的贴边回收秒数配置
-        self.custom_retract_time = int(
-            readme_settings_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_recover_seconds",
-            )
-            or 5
-        )
-        # 复用现有的贴边显示样式配置
-        self.custom_display_mode = int(
-            readme_settings_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_display_style",
-            )
-            or 1
-        )
-        # 新增属性
+        self.custom_retract_time = self._retract_seconds  # 复用现有的贴边回收秒数配置
+        self.custom_display_mode = (
+            self._stick_indicator_style
+        )  # 复用现有的贴边显示样式配置
         self._retracted = False
+
+        logger.debug(f"贴边隐藏功能配置: {self.floating_window_stick_to_edge}")
 
     def _build_ui(self):
         # 两行布局按索引分配，避免 3+ 个按钮全部落到底部
@@ -306,14 +364,14 @@ class LevitationWindow(QWidget):
         if hasattr(self, "_bottom") and self._bottom:
             self._bottom.deleteLater()
             self._bottom = None
-        if self._placement == 1:
+        if self._placement == 1:  # 垂直布局
             lay = QVBoxLayout()
             lay.setContentsMargins(
                 self._margins, self._margins, self._margins, self._margins
             )
             lay.setSpacing(self._spacing)
             return lay
-        if self._placement == 2:
+        if self._placement == 2:  # 水平布局
             lay = QHBoxLayout()
             lay.setContentsMargins(
                 self._margins, self._margins, self._margins, self._margins
@@ -339,69 +397,143 @@ class LevitationWindow(QWidget):
         lay.addWidget(self._bottom)
         return lay
 
-    def _create_button(self, spec):
+    def _create_button(self, spec: str) -> QPushButton:
+        """创建按钮
+
+        Args:
+            spec: 按钮类型标识
+
+        Returns:
+            创建好的按钮实例
+        """
+        # 获取按钮配置信息
+        button_config = self._get_button_config(spec)
+        icon = button_config["icon"]
+        text = button_config["text"]
+        signal = button_config["signal"]
+
+        # 根据显示样式创建不同类型的按钮
+        if self._display_style == 1:
+            btn = self._create_icon_only_button(icon)
+        elif self._display_style == 2:
+            btn = self._create_text_only_button(text)
+        else:
+            btn = self._create_composite_button(icon, text)
+
+        # 连接信号
+        btn.clicked.connect(signal.emit)
+        btn.setAttribute(Qt.WA_TranslucentBackground)
+        return btn
+
+    def _get_button_config(self, spec: str) -> Dict[str, Any]:
+        """获取按钮配置信息
+
+        Args:
+            spec: 按钮类型标识
+
+        Returns:
+            按钮配置字典，包含图标、文本和信号
+        """
         text_map = get_content_combo_name_async(
             "floating_window_management", "floating_window_button_control"
         )
-        names = [text_map[0], text_map[1], text_map[2], text_map[3], text_map[4]]
-        if spec == "roll_call":
-            icon = get_theme_icon("ic_fluent_people_20_filled")
-            text = names[0]
-            sig = self.rollCallRequested
-        elif spec == "quick_draw":
-            icon = get_theme_icon("ic_fluent_flash_20_filled")
-            text = names[1]
-            sig = self.quickDrawRequested
-        elif spec == "instant_draw":
-            icon = get_theme_icon("ic_fluent_play_20_filled")
-            text = names[2]
-            sig = self.instantDrawRequested
-        elif spec == "custom_draw":
-            icon = get_theme_icon("ic_fluent_edit_20_filled")
-            text = names[3]
-            sig = self.customDrawRequested
-        else:
-            icon = get_theme_icon("ic_fluent_gift_20_filled")
-            text = names[4]
-            sig = self.lotteryRequested
+        names = list(text_map)
 
-        if self._display_style == 1:
-            btn = TransparentToolButton()
-            btn.setIcon(icon)
-            btn.setIconSize(self._icon_size)
-            btn.setFixedSize(self._btn_size)
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        elif self._display_style == 2:
-            btn = PushButton(text)
-            btn.setFixedSize(self._btn_size)
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            btn.setFont(self._font(12))
-        else:
-            btn = PushButton()
-            lay = QVBoxLayout(btn)
-            lay.setContentsMargins(0, 4, 0, 4)
-            lay.setSpacing(2)
-            lab_icon = TransparentToolButton()
-            lab_icon.setIcon(icon)
-            lab_icon.setIconSize(self._icon_size)
-            lab_icon.setFixedSize(self._icon_size)
-            # 复合按钮图标不置灰，避免低对比；忽略鼠标事件
-            lab_icon.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-            lab_icon.setFocusPolicy(Qt.NoFocus)
-            lab_text = BodyLabel(text)
-            lab_text.setAlignment(Qt.AlignCenter)
-            lab_text.setFont(self._font(10))
-            lab_text.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-            lab_text.setFocusPolicy(Qt.NoFocus)
-            lay.addWidget(lab_icon)
-            lay.addWidget(lab_text)
-            lay.setAlignment(Qt.AlignCenter)
-            lay.setAlignment(lab_icon, Qt.AlignCenter)
-            lay.setAlignment(lab_text, Qt.AlignCenter)
-            btn.setFixedSize(self._btn_size)
-            btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        btn.clicked.connect(sig.emit)
+        button_configs = {
+            "roll_call": {
+                "icon": get_theme_icon("ic_fluent_people_20_filled"),
+                "text": names[0],
+                "signal": self.rollCallRequested,
+            },
+            "quick_draw": {
+                "icon": get_theme_icon("ic_fluent_flash_20_filled"),
+                "text": names[1],
+                "signal": self.quickDrawRequested,
+            },
+            "instant_draw": {
+                "icon": get_theme_icon("ic_fluent_play_20_filled"),
+                "text": names[2],
+                "signal": self.instantDrawRequested,
+            },
+            "custom_draw": {
+                "icon": get_theme_icon("ic_fluent_edit_20_filled"),
+                "text": names[3],
+                "signal": self.customDrawRequested,
+            },
+        }
+
+        # 默认配置（抽奖按钮）
+        default_config = {
+            "icon": get_theme_icon("ic_fluent_gift_20_filled"),
+            "text": names[4],
+            "signal": self.lotteryRequested,
+        }
+
+        return button_configs.get(spec, default_config)
+
+    def _create_icon_only_button(self, icon: QIcon) -> TransparentToolButton:
+        """创建仅图标按钮"""
+        btn = TransparentToolButton()
+        btn.setIcon(icon)
+        btn.setIconSize(self._icon_size)
+        btn.setFixedSize(self._btn_size)
+        btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        btn.setAttribute(Qt.WA_TranslucentBackground)
         return btn
+
+    def _create_text_only_button(self, text: str) -> PushButton:
+        """创建仅文本按钮"""
+        btn = PushButton(text)
+        btn.setFixedSize(self._btn_size)
+        btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        btn.setFont(self._font(12))
+        btn.setAttribute(Qt.WA_TranslucentBackground)
+        return btn
+
+    def _create_composite_button(self, icon: QIcon, text: str) -> PushButton:
+        """创建图文复合按钮"""
+        btn = PushButton()
+        layout = QVBoxLayout(btn)
+        layout.setContentsMargins(0, 4, 0, 4)
+        layout.setSpacing(2)
+
+        # 图标标签
+        icon_label = self._create_icon_label(icon)
+        layout.addWidget(icon_label)
+
+        # 文本标签
+        text_label = self._create_text_label(text)
+        layout.addWidget(text_label)
+
+        # 布局设置
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(icon_label, Qt.AlignCenter)
+        layout.setAlignment(text_label, Qt.AlignCenter)
+
+        btn.setFixedSize(self._btn_size)
+        btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        btn.setAttribute(Qt.WA_TranslucentBackground)
+        return btn
+
+    def _create_icon_label(self, icon: QIcon) -> TransparentToolButton:
+        """创建图标标签（用于复合按钮）"""
+        label = TransparentToolButton()
+        label.setIcon(icon)
+        label.setIconSize(self._icon_size)
+        label.setFixedSize(self._icon_size)
+        # 复合按钮图标不置灰，避免低对比；忽略鼠标事件
+        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        label.setFocusPolicy(Qt.NoFocus)
+        return label
+
+    def _create_text_label(self, text: str) -> BodyLabel:
+        """创建文本标签（用于复合按钮）"""
+        label = BodyLabel(text)
+        label.setAlignment(Qt.AlignCenter)
+        label.setFont(self._font(10))
+        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        label.setFocusPolicy(Qt.NoFocus)
+        return label
 
     def _add_button(self, btn, index, total):
         if self._placement == 1:
@@ -430,13 +562,17 @@ class LevitationWindow(QWidget):
         pass
 
     def mouseMoveEvent(self, e):
+        """处理鼠标移动事件"""
         if e.buttons() & Qt.LeftButton and self._draggable:
-            # 支持移动阈值触发拖拽，提升交互体验
             cur = e.globalPosition().toPoint()
+
+            # 检查是否需要开始拖拽
             if not self._dragging:
-                delta0 = cur - self._press_pos
-                if abs(delta0.x()) >= 3 or abs(delta0.y()) >= 3:
+                delta = cur - self._press_pos
+                if self._should_start_drag(delta):
                     self._begin_drag()
+
+            # 执行拖拽
             if self._dragging:
                 delta = cur - self._press_pos
                 self.move(self.x() + delta.x(), self.y() + delta.y())
@@ -449,69 +585,86 @@ class LevitationWindow(QWidget):
             self.setCursor(Qt.ArrowCursor)
             if self._draggable and self._dragging:
                 self._dragging = False
-                self._stick_to_nearest_edge()
-                if self._last_stuck:
-                    self._schedule_retract()
-                else:
-                    self._clear_indicator()
                 self._save_position()
 
-            # 如果启用了边缘贴边隐藏功能，在拖动结束后检查是否需要贴边
-            logger.debug(
-                f"鼠标释放事件 - 贴边隐藏功能状态: {self.floating_window_stick_to_edge}"
-            )
-            if self.floating_window_stick_to_edge:
-                # 使用定时器延迟执行边缘检测，确保位置已经保存
-                logger.debug("调度边缘检测")
-                QTimer.singleShot(100, self._check_edge_proximity)
-            pass
+    def _should_start_drag(self, delta: QPoint) -> bool:
+        """判断是否应该开始拖拽
+
+        Args:
+            delta: 鼠标移动偏移量
+
+        Returns:
+            是否应该开始拖拽
+        """
+        return (
+            abs(delta.x()) >= self.DRAG_THRESHOLD
+            or abs(delta.y()) >= self.DRAG_THRESHOLD
+        )
 
     def eventFilter(self, obj, event):
+        """事件过滤器，处理拖拽相关事件"""
         if not self._draggable:
             return False
 
         if event.type() == QEvent.MouseButtonPress:
-            if event.button() == Qt.LeftButton:
-                self._press_pos = event.globalPosition().toPoint()
-                self._dragging = False
-                self._drag_timer.stop()
-                self._drag_timer.start(self._long_press_ms)
-            return False
-        if event.type() == QEvent.MouseMove:
-            if event.buttons() & Qt.LeftButton:
-                cur = event.globalPosition().toPoint()
-                if not self._dragging:
-                    delta0 = cur - self._press_pos
-                    if abs(delta0.x()) >= 3 or abs(delta0.y()) >= 3:
-                        self._begin_drag()
-                if self._dragging:
-                    delta = cur - self._press_pos
-                    self.move(self.x() + delta.x(), self.y() + delta.y())
-                    self._press_pos = cur
-                    self._cancel_retract()
-                    return True
-            return False
-        if event.type() == QEvent.MouseButtonRelease:
-            if event.button() == Qt.LeftButton:
-                self._drag_timer.stop()
-                if self._dragging:
-                    self._dragging = False
-                    self.setCursor(Qt.ArrowCursor)
-                    self._stick_to_nearest_edge()
-                    if self._last_stuck:
-                        self._schedule_retract()
-                    else:
-                        self._clear_indicator()
-                    self._save_position()
+            return self._handle_mouse_press_event(event)
+        elif event.type() == QEvent.MouseMove:
+            return self._handle_mouse_move_event(event)
+        elif event.type() == QEvent.MouseButtonRelease:
+            return self._handle_mouse_release_event(event)
 
-                    # 如果启用了边缘贴边隐藏功能，在拖动结束后检查是否需要贴边
-                    if self.floating_window_stick_to_edge:
-                        # 使用定时器延迟执行边缘检测，确保位置已经保存
-                        QTimer.singleShot(100, self._check_edge_proximity)
-                    pass
-                    return True
-            return False
         return False
+
+    def _handle_mouse_press_event(self, event) -> bool:
+        """处理鼠标按下事件"""
+        if event.button() == Qt.LeftButton:
+            self._press_pos = event.globalPosition().toPoint()
+            self._dragging = False
+            self._drag_timer.stop()
+            self._drag_timer.start(self._long_press_ms)
+        return False
+
+    def _handle_mouse_move_event(self, event) -> bool:
+        """处理鼠标移动事件"""
+        if event.buttons() & Qt.LeftButton:
+            cur = event.globalPosition().toPoint()
+
+            # 检查是否需要开始拖拽
+            if not self._dragging:
+                delta = cur - self._press_pos
+                if self._should_start_drag(delta):
+                    self._begin_drag()
+
+            # 执行拖拽
+            if self._dragging:
+                delta = cur - self._press_pos
+                self.move(self.x() + delta.x(), self.y() + delta.y())
+                self._press_pos = cur
+                return True
+
+        return False
+
+    def _handle_mouse_release_event(self, event) -> bool:
+        """处理鼠标释放事件"""
+        if event.button() == Qt.LeftButton:
+            self._drag_timer.stop()
+            if self._dragging:
+                self._end_drag_operation()
+                return True
+
+        return False
+
+    def _end_drag_operation(self):
+        """结束拖拽操作"""
+        self._dragging = False
+        self.setCursor(Qt.ArrowCursor)
+        self._stick_to_nearest_edge()
+
+        self._save_position()
+
+        # 如果启用了边缘贴边隐藏功能，在拖动结束后检查是否需要贴边
+        if self.floating_window_stick_to_edge:
+            QTimer.singleShot(100, self._check_edge_proximity)
 
     def _install_drag_filters(self):
         self._container.installEventFilter(self)
@@ -527,20 +680,22 @@ class LevitationWindow(QWidget):
             delattr(self, "_auto_hide_timer")
 
     def leaveEvent(self, e):
-        if self._retracted:
-            self._schedule_retract()
-
-        # 如果启用了边缘贴边隐藏功能，当鼠标离开窗口时，延迟后自动隐藏
-        if self.floating_window_stick_to_edge and not self._retracted:
-            # 清除旧的定时器
-            if hasattr(self, "_auto_hide_timer") and self._auto_hide_timer.isActive():
-                self._auto_hide_timer.stop()
-            # 创建或重置自动隐藏定时器
-            self._auto_hide_timer = QTimer(self)
-            self._auto_hide_timer.setSingleShot(True)
-            self._auto_hide_timer.timeout.connect(self._auto_hide_window)
-            # 设置延迟时间
-            self._auto_hide_timer.start(self.custom_retract_time * 1000)
+        # 如果启用了新的贴边隐藏功能，使用新的自动隐藏逻辑
+        if self.floating_window_stick_to_edge:
+            # 如果已经处于收纳状态，不需要额外处理
+            if not self._retracted:
+                # 清除旧的定时器
+                if (
+                    hasattr(self, "_auto_hide_timer")
+                    and self._auto_hide_timer.isActive()
+                ):
+                    self._auto_hide_timer.stop()
+                # 创建或重置自动隐藏定时器
+                self._auto_hide_timer = QTimer(self)
+                self._auto_hide_timer.setSingleShot(True)
+                self._auto_hide_timer.timeout.connect(self._auto_hide_window)
+                # 设置延迟时间
+                self._auto_hide_timer.start(self.custom_retract_time * 1000)
 
     def _stick_to_nearest_edge(self):
         if not self._stick_to_edge:
@@ -553,24 +708,11 @@ class LevitationWindow(QWidget):
         self._last_stuck = False
         if left <= self._edge_threshold:
             self.move(geo.left(), self.y())
-            # 如果启用了新的贴边隐藏功能，不显示旧的指示器
-            if not self.floating_window_stick_to_edge:
-                self._show_indicator("left")
             self._last_stuck = True
             return
         if right <= self._edge_threshold:
             self.move(geo.right() - self.width() + 1, self.y())
-            # 如果启用了新的贴边隐藏功能，不显示旧的指示器
-            if not self.floating_window_stick_to_edge:
-                self._show_indicator("right")
             self._last_stuck = True
-
-    def _schedule_retract(self):
-        if not self._stick_to_edge:
-            return
-        if self._retract_seconds and self._retract_seconds > 0:
-            self._retract_timer.stop()
-            self._retract_timer.start(self._retract_seconds * 1000)
 
     def _cancel_retract(self):
         if self._retract_timer.isActive():
@@ -585,15 +727,9 @@ class LevitationWindow(QWidget):
         if self.x() <= geo.left():
             self.move(geo.left() - self.width() + handle, self.y())
             self._retracted = True
-            # 如果启用了新的贴边隐藏功能，不显示旧的指示器
-            if not self.floating_window_stick_to_edge:
-                self._show_indicator("right")
         elif self.x() + self.width() >= geo.right():
             self.move(geo.right() - handle + 1, self.y())
             self._retracted = True
-            # 如果启用了新的贴边隐藏功能，不显示旧的指示器
-            if not self.floating_window_stick_to_edge:
-                self._show_indicator("left")
 
     def _expand_from_edge(self):
         # 基于当前屏幕可用区域展开
@@ -605,7 +741,6 @@ class LevitationWindow(QWidget):
         elif self.x() + self.width() > geo.right():
             self.move(geo.right() - self.width() + 1, self.y())
         self._retracted = False
-        self._clear_indicator()
 
     def _check_edge_proximity(self):
         """检测窗口是否靠近屏幕边缘，并实现贴边隐藏功能（带动画效果）"""
@@ -617,9 +752,6 @@ class LevitationWindow(QWidget):
             and self.animation.state() == QPropertyAnimation.Running
         ):
             self.animation.stop()
-
-        # 清除可能存在的旧指示器
-        self._clear_indicator()
 
         logger.debug(f"贴边隐藏功能状态: {self.floating_window_stick_to_edge}")
 
@@ -758,38 +890,6 @@ class LevitationWindow(QWidget):
 
         self._retracted = False
 
-    def _show_indicator(self, direction):
-        self._clear_indicator()
-        w = QWidget(self)
-        w.resize(16, 16)
-        if self._stick_indicator_style == 0:
-            tb = ToolButton(w)
-            qicon = get_theme_icon("ic_fluent_pin_20_filled").icon()
-            tb.setIcon(qicon)
-            tb.setIconSize(QSize(14, 14))
-            tb.setFixedSize(16, 16)
-        elif self._stick_indicator_style == 1:
-            lab = BodyLabel("浮窗", w)
-            lab.setAlignment(Qt.AlignCenter)
-            lab.setFont(self._font(8))
-        else:
-            lab = BodyLabel(w)
-            lab.setStyleSheet("border-radius: 2px;")
-        if direction == "left":
-            w.move(-8, self.height() // 2 - 8)
-        elif direction == "right":
-            w.move(self.width() - 8, self.height() // 2 - 8)
-        else:
-            w.move(self.width() // 2 - 8, -8)
-        w.show()
-        self._indicator = w
-
-    def _clear_indicator(self):
-        if self._indicator:
-            self._indicator.hide()
-            self._indicator.deleteLater()
-            self._indicator = None
-
     def _create_storage_window(self, direction, x, y):
         """创建只能在y轴移动的收纳浮窗"""
         # 先删除可能存在的收纳浮窗
@@ -798,7 +898,11 @@ class LevitationWindow(QWidget):
         # 创建收纳浮窗
         self.storage_window = QWidget()
         self.storage_window.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool | Qt.NoFocus
+            Qt.FramelessWindowHint
+            | Qt.WindowStaysOnTopHint
+            | Qt.Tool
+            | Qt.NoFocus
+            | Qt.NoDropShadowWindowHint
         )
         self.storage_window.setAttribute(Qt.WA_TranslucentBackground)
 
@@ -853,97 +957,8 @@ class LevitationWindow(QWidget):
         self._storage_direction = direction
         self._storage_initial_x = x
 
-        # 添加悬停效果，提升用户体验
-        self.storage_window.setMouseTracking(True)
-        self.storage_window.enterEvent = self._on_storage_enter
-        self.storage_window.leaveEvent = self._on_storage_leave
-
         # 显示收纳浮窗
         self.storage_window.show()
-
-    def _on_storage_enter(self, event):
-        """收纳浮窗鼠标进入事件 - 增强交互体验"""
-        if hasattr(self, "storage_window") and self.storage_window:
-            # 鼠标悬停时增加透明度并添加轻微放大效果
-            current_style = self.storage_window.styleSheet()
-            if "background-clip: padding-box;" in current_style:
-                # 提取当前颜色值
-                rgba_part = current_style.split("rgba(")[1].split(")")[0]
-                # 设置悬停样式：增加透明度并添加边框高亮
-                hover_style = (
-                    current_style.split("background-color: rgba(")[0]
-                    + "background-color: rgba("
-                    + rgba_part
-                    + ", 0.9);"
-                    + "border: 2px solid rgba(255, 255, 255, 0.3);"
-                    + "background-clip: padding-box;"
-                )
-                self.storage_window.setStyleSheet(hover_style)
-                # 添加轻微的缩放动画效果
-                if (
-                    hasattr(self, "storage_hover_animation")
-                    and self.storage_hover_animation
-                ):
-                    self.storage_hover_animation.stop()
-                self.storage_hover_animation = QPropertyAnimation(
-                    self.storage_window, b"geometry"
-                )
-                self.storage_hover_animation.setDuration(150)
-                self.storage_hover_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
-                current_geom = self.storage_window.geometry()
-                # 轻微放大效果
-                new_geom = QRect(
-                    current_geom.x() - 2,
-                    current_geom.y() - 1,
-                    current_geom.width() + 4,
-                    current_geom.height() + 2,
-                )
-                self.storage_hover_animation.setEndValue(new_geom)
-                self.storage_hover_animation.start()
-
-    def _on_storage_leave(self, event):
-        """收纳浮窗鼠标离开事件 - 增强交互体验"""
-        if hasattr(self, "storage_window") and self.storage_window:
-            # 停止悬停动画
-            if (
-                hasattr(self, "storage_hover_animation")
-                and self.storage_hover_animation
-            ):
-                self.storage_hover_animation.stop()
-
-            # 鼠标离开时恢复原始透明度和样式
-            current_style = self.storage_window.styleSheet()
-            if "background-clip: padding-box;" in current_style:
-                # 提取颜色值并恢复原始样式
-                rgba_part = current_style.split("rgba(")[1].split(")")[0]
-                original_style = (
-                    current_style.split("background-color: rgba(")[0]
-                    + "background-color: rgba("
-                    + rgba_part
-                    + ", "
-                    + str(self._opacity)
-                    + ");"
-                    + "border: none;"
-                    + "background-clip: padding-box;"
-                )
-                self.storage_window.setStyleSheet(original_style)
-
-                # 添加恢复动画效果
-                self.storage_leave_animation = QPropertyAnimation(
-                    self.storage_window, b"geometry"
-                )
-                self.storage_leave_animation.setDuration(200)
-                self.storage_leave_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
-                current_geom = self.storage_window.geometry()
-                # 恢复原始尺寸
-                original_geom = QRect(
-                    current_geom.x() + 2,
-                    current_geom.y() + 1,
-                    current_geom.width() - 4,
-                    current_geom.height() - 2,
-                )
-                self.storage_leave_animation.setEndValue(original_geom)
-                self.storage_leave_animation.start()
 
     def _smart_snap_to_edge(self):
         """智能吸附到屏幕边缘"""
@@ -1170,9 +1185,8 @@ class LevitationWindow(QWidget):
         # 定义主窗口的动画完成回调
         def on_main_animation_finished():
             self._retracted = False
-            # 激活主窗口，确保窗口显示在最前面
+            # 将窗口提升到最前面，但不激活窗口
             self.raise_()
-            self.activateWindow()
             # 设置自动隐藏定时器
             self._auto_hide_timer = QTimer(self)
             self._auto_hide_timer.setSingleShot(True)
@@ -1256,7 +1270,7 @@ class LevitationWindow(QWidget):
             | Qt.WindowStaysOnTopHint
             | Qt.Tool
             | Qt.NoFocus
-            | Qt.Popup
+            | Qt.NoDropShadowWindowHint
         )
 
         # 设置容器透明
@@ -1292,11 +1306,7 @@ class LevitationWindow(QWidget):
             self.arrow_button.setText("抽")
         elif self._stick_indicator_style == 2:  # 图标模式
             try:
-                # 根据主题设置不同的图标
-                if dark:
-                    icon = get_theme_icon("ic_fluent_pin_20_filled")
-                else:
-                    icon = get_theme_icon("ic_fluent_pin_20_regular")
+                icon = get_theme_icon("ic_fluent_people_20_filled")
                 self.arrow_button.setIcon(icon)
                 self.arrow_button.setIconSize(QSize(20, 20))
             except Exception as e:
@@ -1347,9 +1357,6 @@ class LevitationWindow(QWidget):
         self.arrow_widget.raise_()
         self.arrow_widget.show()
         logger.debug(f"DraggableWidget箭头按钮已显示，位置: {self.arrow_widget.pos()}")
-
-        # 强制容器获取焦点
-        self.arrow_widget.setFocus()
 
     def _show_hidden_window(self, direction):
         """显示隐藏的窗口（带动画效果）"""
@@ -1415,9 +1422,8 @@ class LevitationWindow(QWidget):
 
         # 不保存位置，保持贴边隐藏前的原始位置
 
-        # 激活主窗口，确保窗口显示在最前面
+        # 将窗口提升到最前面，但不激活窗口
         self.raise_()
-        self.activateWindow()
 
         # 根据自定义收回秒数设置延迟后自动隐藏窗口
         retract_time = self.custom_retract_time * 1000  # 转换为毫秒
@@ -1453,20 +1459,8 @@ class LevitationWindow(QWidget):
                 self._display_style = int(value or 0)
                 self.rebuild_ui()
             elif second == "floating_window_stick_to_edge":
+                # 同时更新旧的贴边功能和新的贴边隐藏功能
                 self._stick_to_edge = bool(value)
-            elif second == "floating_window_stick_to_edge_recover_seconds":
-                self._retract_seconds = int(value or 0)
-            elif second == "floating_window_long_press_duration":
-                self._long_press_ms = int(value or 500)
-            elif second == "floating_window_stick_to_edge_display_style":
-                self._stick_indicator_style = int(value or 0)
-            elif second == "floating_window_button_control":
-                self._buttons_spec = self._map_button_control(int(value or 0))
-                self.rebuild_ui()
-            elif second == "floating_window_draggable":
-                self._draggable = bool(value)
-            # 贴边隐藏功能配置项
-            elif second == "flash_window_side_switch":
                 self.floating_window_stick_to_edge = bool(value)
                 # 如果启用了功能，立即检查边缘
                 if bool(value):
@@ -1476,10 +1470,19 @@ class LevitationWindow(QWidget):
                     self._delete_storage_window()
                     if self._retracted:
                         self._expand_from_edge()
-            elif second == "custom_retract_time":
+            elif second == "floating_window_stick_to_edge_recover_seconds":
+                self._retract_seconds = int(value or 0)
                 self.custom_retract_time = int(value or 5)
-            elif second == "custom_display_mode":
+            elif second == "floating_window_long_press_duration":
+                self._long_press_ms = int(value or 500)
+            elif second == "floating_window_stick_to_edge_display_style":
+                self._stick_indicator_style = int(value or 0)
                 self.custom_display_mode = int(value or 1)
+            elif second == "floating_window_button_control":
+                self._buttons_spec = self._map_button_control(int(value or 0))
+                self.rebuild_ui()
+            elif second == "floating_window_draggable":
+                self._draggable = bool(value)
             # 当任何影响外观的设置改变时，重新应用主题样式
             self._apply_theme_style()
         elif first == "float_position":
@@ -1545,19 +1548,15 @@ class DraggableWidget(QWidget):
     def _init_keep_top_timer(self):
         """初始化保持置顶定时器
         优化：减少定时器间隔并提高置顶效率"""
-        # 优化：减少定时器间隔从200ms到100ms，提高响应速度
         self.keep_top_timer = QTimer(self)
         self.keep_top_timer.timeout.connect(self._keep_window_on_top)
-        self.keep_top_timer.start(100)  # 减少间隔时间，提高响应速度
+        self.keep_top_timer.start(100)
 
     def _keep_window_on_top(self):
         """保持窗口置顶
         优化：简化置顶逻辑，提高效率"""
         try:
-            # 优化：只执行必要的置顶操作，移除不必要的条件判断
             self.raise_()  # 将窗口提升到最前面
-            # 注释掉激活窗口的操作，避免干扰用户当前操作
-            # self.activateWindow()  # 激活窗口
         except Exception as e:
             logger.error(f"保持窗口置顶失败: {e}")
 
