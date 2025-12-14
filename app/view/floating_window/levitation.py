@@ -492,10 +492,12 @@ class LevitationWindow(QWidget):
 
     def _create_composite_button(self, icon: QIcon, text: str) -> PushButton:
         """创建图文复合按钮"""
-        btn = PushButton()
+        btn = QPushButton()
         layout = QVBoxLayout(btn)
         layout.setContentsMargins(0, 4, 0, 4)
         layout.setSpacing(2)
+        layout.setAlignment(Qt.AlignCenter)
+        btn.setStyleSheet("background: transparent; border: none;")
 
         # 图标标签
         icon_label = self._create_icon_label(icon)
@@ -522,8 +524,10 @@ class LevitationWindow(QWidget):
         label.setIconSize(self._icon_size)
         label.setFixedSize(self._icon_size)
         # 复合按钮图标不置灰，避免低对比；忽略鼠标事件
-        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        label.setFocusPolicy(Qt.NoFocus)
+        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)  # 忽略鼠标事件
+        label.setFocusPolicy(Qt.NoFocus)  # 无焦点
+        # 标签样式：居中对齐、无背景、无边框
+        label.setStyleSheet("background: transparent; border: none;")
         return label
 
     def _create_text_label(self, text: str) -> BodyLabel:
@@ -531,8 +535,10 @@ class LevitationWindow(QWidget):
         label = BodyLabel(text)
         label.setAlignment(Qt.AlignCenter)
         label.setFont(self._font(10))
-        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        label.setFocusPolicy(Qt.NoFocus)
+        label.setAttribute(Qt.WA_TransparentForMouseEvents, True)  # 忽略鼠标事件
+        label.setFocusPolicy(Qt.NoFocus)  # 无焦点
+        # 标签样式：居中对齐、无背景、无边框
+        label.setStyleSheet("background: transparent; border: none;")
         return label
 
     def _add_button(self, btn, index, total):
@@ -723,12 +729,13 @@ class LevitationWindow(QWidget):
         fg = self.frameGeometry()
         scr = QGuiApplication.screenAt(fg.center()) or QApplication.primaryScreen()
         geo = scr.availableGeometry()
-        handle = 16
         if self.x() <= geo.left():
-            self.move(geo.left() - self.width() + handle, self.y())
+            # 完全移出屏幕左侧
+            self.move(geo.left() - self.width(), self.y())
             self._retracted = True
         elif self.x() + self.width() >= geo.right():
-            self.move(geo.right() - handle + 1, self.y())
+            # 完全移出屏幕右侧
+            self.move(geo.right(), self.y())
             self._retracted = True
 
     def _expand_from_edge(self):
@@ -788,9 +795,9 @@ class LevitationWindow(QWidget):
             # 设置动画起始值（当前位置）
             self.animation.setStartValue(self.geometry())
 
-            # 设置动画结束值（隐藏位置）
+            # 设置动画结束值（隐藏位置）- 完全移出屏幕
             end_rect = QRect(
-                -window_width + hidden_width,
+                -window_width,
                 window_pos.y(),
                 window_width,
                 window_height,
@@ -838,9 +845,9 @@ class LevitationWindow(QWidget):
             # 设置动画起始值（当前位置）
             self.animation.setStartValue(self.geometry())
 
-            # 设置动画结束值（隐藏位置）
+            # 设置动画结束值（隐藏位置）- 完全移出屏幕
             end_rect = QRect(
-                screen.width() - hidden_width,
+                screen.width(),
                 window_pos.y(),
                 window_width,
                 window_height,
