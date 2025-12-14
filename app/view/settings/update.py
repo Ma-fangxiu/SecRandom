@@ -534,22 +534,32 @@ class update(QWidget):
 
         # 定义下载任务类
         class DownloadTask(QRunnable):
-            def __init__(self, version, progress_callback, on_complete):
+            def __init__(self, version, progress_callback, on_complete, parent):
                 super().__init__()
                 self.version = version
                 self.progress_callback = progress_callback
                 self.on_complete = on_complete
+                self.parent = parent
+                self.setAutoDelete(True)
 
             def run(self):
                 """执行下载任务"""
-                file_path = download_update(
-                    self.version, progress_callback=self.progress_callback
-                )
-                self.on_complete(file_path)
+                try:
+                    # 增加超时设置和更好的错误处理
+                    file_path = download_update(
+                        self.version,
+                        progress_callback=self.progress_callback,
+                        timeout=300,  # 增加超时时间到300秒
+                    )
+                    self.on_complete(file_path)
+                except Exception as e:
+                    logger.error(f"下载任务执行失败: {e}")
+                    # 确保即使发生异常也会调用完成回调
+                    self.on_complete(None)
 
         # 使用 QThreadPool 执行下载任务
         self._download_task = DownloadTask(
-            latest_version, progress_callback, on_download_complete
+            latest_version, progress_callback, on_download_complete, self
         )
         QThreadPool.globalInstance().start(self._download_task)
 

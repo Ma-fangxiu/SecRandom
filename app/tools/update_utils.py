@@ -8,6 +8,7 @@ import zipfile
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any, Tuple, Callable, Optional
 from loguru import logger
 from app.tools.path_utils import *
@@ -389,6 +390,7 @@ async def download_update_async(
     arch: str = ARCH,
     struct: str = STRUCT,
     progress_callback: Optional[Callable] = None,
+    timeout: int = 300,  # 增加超时参数，默认300秒
 ) -> Optional[str]:
     """
     异步下载更新文件
@@ -399,6 +401,7 @@ async def download_update_async(
         arch (str, optional): 架构，默认为当前架构
         struct (str, optional): 结构，默认为当前结构
         progress_callback (Optional[Callable]): 进度回调函数，接收已下载字节数和总字节数
+        timeout (int, optional): 下载超时时间（秒），默认300秒
 
     Returns:
         Optional[str]: 下载完成的文件路径，如果下载失败则返回 None
@@ -422,26 +425,39 @@ async def download_update_async(
         ensure_dir(download_dir)
         file_path = download_dir / file_name
 
+        # 配置客户端超时设置
+        client_timeout = aiohttp.ClientTimeout(
+            total=timeout,  # 总超时时间
+            connect=30,  # 连接超时时间
+            sock_read=60,  # 读取超时时间
+            sock_connect=30,  # Socket连接超时时间
+        )
+
         # 发送异步请求
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=client_timeout) as session:
             async with session.get(
-                download_url, timeout=60, allow_redirects=True
+                download_url,
+                allow_redirects=True,
+                headers={"User-Agent": "SecRandom Update Client"},
             ) as response:
                 response.raise_for_status()
 
                 # 获取文件总大小
                 total_size = int(response.headers.get("Content-Length", 0))
                 downloaded_size = 0
+                last_progress_time = time.time()
 
                 # 开始下载文件
                 with open(file_path, "wb") as f:
-                    async for chunk in response.content.iter_chunked(8192):
+                    # 使用更大的块大小提高下载速度
+                    async for chunk in response.content.iter_chunked(32768):
                         if not chunk:
                             break
 
                         # 写入文件
                         f.write(chunk)
                         downloaded_size += len(chunk)
+                        last_progress_time = time.time()
 
                         # 调用进度回调函数
                         if progress_callback:
@@ -449,6 +465,16 @@ async def download_update_async(
 
         logger.debug(f"更新文件下载成功: {file_path}")
         return file_path
+    except aiohttp.ClientTimeout as e:
+        logger.error(f"下载超时: {e}")
+        return None
+    except aiohttp.ClientError as e:
+        logger.error(f"HTTP请求失败: {e}")
+        # 尝试使用不同的超时策略重试一次
+        logger.info("尝试使用更长超时时间重试下载...")
+        return await download_update_async(
+            version, system, arch, struct, progress_callback, timeout=timeout * 2
+        )
     except Exception as e:
         logger.error(f"下载更新文件失败: {e}")
         return None
@@ -460,6 +486,7 @@ def download_update(
     arch: str = ARCH,
     struct: str = STRUCT,
     progress_callback: Optional[Callable] = None,
+    timeout: int = 300,  # 增加超时参数，默认300秒
 ) -> Optional[str]:
     """
     下载更新文件（同步版本）
@@ -470,12 +497,13 @@ def download_update(
         arch (str, optional): 架构，默认为当前架构
         struct (str, optional): 结构，默认为当前结构
         progress_callback (Optional[Callable]): 进度回调函数，接收已下载字节数和总字节数
+        timeout (int, optional): 下载超时时间（秒），默认300秒
 
     Returns:
         Optional[str]: 下载完成的文件路径，如果下载失败则返回 None
     """
     return _run_async_func(
-        download_update_async, version, system, arch, struct, progress_callback
+        download_update_async, version, system, arch, struct, progress_callback, timeout
     )
 
 
