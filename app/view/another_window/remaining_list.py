@@ -175,13 +175,19 @@ class StudentLoader(QThread):
                             or drawn_counts[student_name] < self.half_repeat
                         ):
                             remaining_students.append(student)
+
+                # 如果过滤后没有学生，返回原始学生列表（调试用）
+                if not remaining_students:
+                    logger.debug(
+                        f"half_repeat过滤后没有剩余学生，返回原始列表。half_repeat={self.half_repeat}, drawn_counts={drawn_counts}"
+                    )
+                    remaining_students = filtered_students
+
                 filtered_students = remaining_students
 
             # 发送结果回主线程
             self.finished.emit(filtered_students)
         except Exception as e:
-            from loguru import logger
-
             logger.exception("在 StudentLoader.run 中加载学生时出错: {}", e)
             # 出错时返回空列表
             try:
@@ -220,8 +226,6 @@ class RemainingListPage(QWidget):
         try:
             self._font_family = load_custom_font()
         except Exception as e:
-            from loguru import logger
-
             logger.exception("Failed to load custom font: {}", e)
             self._font_family = None
         # 预先设置为空；init_ui 中会尝试异步预取模板文本
@@ -351,8 +355,6 @@ class RemainingListPage(QWidget):
                 except Exception:
                     pass
         except Exception as e:
-            from loguru import logger
-
             logger.exception("加载剩余名单数据时出错: {}", e)
 
         students_file = self.get_students_file()
@@ -378,14 +380,36 @@ class RemainingListPage(QWidget):
             self.students = students_list
             # 使用QTimer将更新调度到事件循环中，保持与原有逻辑一致
             QTimer.singleShot(0, self.update_ui)
+
+            # 计算剩余学生人数
+            remaining_count = 0
+            is_showing_groups = (
+                any(student.get("is_group", False) for student in self.students)
+                if self.students
+                else False
+            )
+
+            if is_showing_groups:
+                # 如果显示小组，计算所有小组成员总数
+                for student in self.students:
+                    if student.get("is_group", False):
+                        # 添加小组成员数量
+                        remaining_count += len(student.get("members", []))
+                    else:
+                        # 单个学生卡片
+                        remaining_count += 1
+            else:
+                # 直接显示学生数量
+                remaining_count = len(self.students)
+
+            # 发出count_changed信号
+            self.count_changed.emit(remaining_count)
         finally:
             try:
                 # 清理线程引用
                 if hasattr(self, "_loading_thread"):
                     self._loading_thread = None
             except Exception as e:
-                from loguru import logger
-
                 logger.exception("Error handling student group processing: {}", e)
 
     def update_ui(self):
@@ -404,7 +428,8 @@ class RemainingListPage(QWidget):
         # 更新标题和人数/组数
         self.title_label.setText(title_text.format(class_name=self.class_name))
 
-        # 检查是否显示小组
+        # 计算剩余学生人数
+        remaining_count = 0
         is_showing_groups = (
             any(student.get("is_group", False) for student in self.students)
             if self.students
@@ -412,12 +437,20 @@ class RemainingListPage(QWidget):
         )
 
         if is_showing_groups:
-            # 显示组数
-            group_count = len(self.students)
-            self.count_label.setText(group_count_text.format(count=group_count))
+            # 如果显示小组，计算所有小组成员总数
+            for student in self.students:
+                if student.get("is_group", False):
+                    # 添加小组成员数量
+                    remaining_count += len(student.get("members", []))
+                else:
+                    # 单个学生卡片
+                    remaining_count += 1
         else:
-            # 显示人数
-            self.count_label.setText(count_text.format(count=len(self.students)))
+            # 直接显示学生数量
+            remaining_count = len(self.students)
+
+        # 显示剩余学生人数
+        self.count_label.setText(count_text.format(count=remaining_count))
 
         # 清空现有卡片并准备异步渲染
         self.cards = []
@@ -493,15 +526,11 @@ class RemainingListPage(QWidget):
             try:
                 self.setUpdatesEnabled(True)
             except Exception as e:
-                from loguru import logger
-
                 logger.exception("Error processing student in StudentLoader: {}", e)
             try:
                 if top_win is not None:
                     top_win.setUpdatesEnabled(True)
             except Exception as e:
-                from loguru import logger
-
                 logger.exception(
                     "Error re-enabling updates on top window (ignored): {}", e
                 )
@@ -509,8 +538,6 @@ class RemainingListPage(QWidget):
                 # 触发一次完整刷新
                 self.update()
             except Exception as e:
-                from loguru import logger
-
                 logger.exception(
                     "Error calling update() after layout update (ignored): {}", e
                 )
@@ -531,8 +558,6 @@ class RemainingListPage(QWidget):
             # 至少显示1列，且不超过一个合理上限
             return max(1, min(int(max_cols), 6))
         except Exception as e:
-            from loguru import logger
-
             logger.exception("Error calculating columns (fallback to 1): {}", e)
             return 1
 
@@ -577,8 +602,6 @@ class RemainingListPage(QWidget):
                             if getattr(self.reporter, "cancel_requested", False):
                                 break
                         except Exception as e:
-                            from loguru import logger
-
                             logger.exception(
                                 "Error checking reporter cancel flag (ignored): {}", e
                             )
@@ -615,8 +638,6 @@ class RemainingListPage(QWidget):
                             if getattr(self.reporter, "cancel_requested", False):
                                 break
                         except Exception as e:
-                            from loguru import logger
-
                             logger.exception(
                                 "Error checking reporter cancel flag before emit (ignored): {}",
                                 e,
@@ -624,26 +645,18 @@ class RemainingListPage(QWidget):
                         try:
                             self.reporter.batch_ready.emit(batch)
                         except Exception as e:
-                            from loguru import logger
-
                             logger.exception(
                                 "Error emitting batch_ready (ignored): {}", e
                             )
                     try:
                         self.reporter.finished.emit()
                     except Exception as e:
-                        from loguru import logger
-
                         logger.exception("Error emitting finished (ignored): {}", e)
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception("Unhandled error in StudentRenderTask.run: {}", e)
                     try:
                         self.reporter.finished.emit()
                     except Exception as inner_e:
-                        from loguru import logger
-
                         logger.exception(
                             "Error emitting finished after exception: {}", inner_e
                         )
@@ -654,15 +667,11 @@ class RemainingListPage(QWidget):
                 try:
                     self._render_reporter.cancel_requested = True
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception(
                         "Error requesting cancel on previous render reporter (ignored): {}",
                         e,
                     )
         except Exception as e:
-            from loguru import logger
-
             logger.exception("Error in RemainingListPage initialization: {}", e)
 
         self._render_reporter = reporter
@@ -688,8 +697,6 @@ class RemainingListPage(QWidget):
             if getattr(reporter, "cancel_requested", False):
                 return
         except Exception as e:
-            from loguru import logger
-
             logger.exception(
                 "Error checking reporter cancel_requested flag in _on_batch_ready (ignored): {}",
                 e,
@@ -717,8 +724,6 @@ class RemainingListPage(QWidget):
                     if card.parent() is not None and card.parent() is not self:
                         card.setParent(None)
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception("Error resetting card parent (ignored): {}", e)
 
                 self.cards.append(card)
@@ -736,8 +741,6 @@ class RemainingListPage(QWidget):
                     if self.grid_layout.indexOf(card) != -1:
                         continue
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception(
                         "Error checking grid_layout.indexOf (ignored): {}", e
                     )
@@ -754,8 +757,6 @@ class RemainingListPage(QWidget):
                             try:
                                 self.grid_layout.removeWidget(existing_widget)
                             except Exception as e:
-                                from loguru import logger
-
                                 logger.exception(
                                     "Error removing existing widget from grid (ignored): {}",
                                     e,
@@ -763,14 +764,10 @@ class RemainingListPage(QWidget):
                             try:
                                 existing_widget.hide()
                             except Exception as e:
-                                from loguru import logger
-
                                 logger.exception(
                                     "Error hiding existing widget (ignored): {}", e
                                 )
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception(
                         "Error handling existing widget in grid (ignored): {}", e
                     )
@@ -785,8 +782,6 @@ class RemainingListPage(QWidget):
             for col in range(columns):
                 self.grid_layout.setColumnStretch(col, 1)
         except Exception as e:
-            from loguru import logger
-
             logger.exception("增量渲染时布局更新失败: {}", e)
 
     def _on_render_finished(self, reporter):
@@ -795,8 +790,6 @@ class RemainingListPage(QWidget):
             if getattr(reporter, "cancel_requested", False):
                 return
         except Exception as e:
-            from loguru import logger
-
             logger.exception(
                 "Error checking reporter cancel_requested in _on_render_finished (ignored): {}",
                 e,
@@ -815,8 +808,6 @@ class RemainingListPage(QWidget):
                 self._render_timer.stop()
                 self._render_timer = None
         except Exception as e:
-            from loguru import logger
-
             logger.exception(
                 "Error stopping render timer in _finalize_render (ignored): {}", e
             )
@@ -841,8 +832,6 @@ class RemainingListPage(QWidget):
                 try:
                     self.grid_layout.removeWidget(widget)
                 except Exception as e:
-                    from loguru import logger
-
                     logger.exception(
                         "Error removing widget from grid during clear (ignored): {}", e
                     )
@@ -851,8 +840,6 @@ class RemainingListPage(QWidget):
         try:
             self._cards_set.clear()
         except Exception as e:
-            from loguru import logger
-
             logger.exception("Error clearing cards set (ignored): {}", e)
 
     def create_student_card(self, student: Dict[str, Any]) -> CardWidget:
@@ -1193,11 +1180,8 @@ class RemainingListPage(QWidget):
         # 重新加载学生数据
         self.load_student_data()
 
-        # 如果需要发出信号，则发出count_changed信号
-        if emit_signal:
-            # 计算剩余人数
-            remaining_count = len(self.students) if hasattr(self, "students") else 0
-            self.count_changed.emit(remaining_count)
+        # 信号将在学生数据加载完成后通过_on_students_loaded方法发出
+        pass
 
     def refresh(self):
         """刷新页面"""
