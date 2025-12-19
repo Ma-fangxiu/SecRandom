@@ -166,7 +166,7 @@ class SimpleWindowTemplate(FramelessWindow):
                         break
 
         # 确保在设置标题栏后应用当前主题和自定义字体
-        # self._apply_current_theme()
+        self._apply_current_theme()
 
         if self.parent_window is None:
             screen = QApplication.primaryScreen().availableGeometry()
@@ -229,7 +229,7 @@ class SimpleWindowTemplate(FramelessWindow):
                 self.default_page.setStyleSheet("background-color: transparent;")
 
             # 应用标题栏自定义字体和颜色
-            # self._set_titlebar_colors()
+            self._set_titlebar_colors()
 
             logger.debug(f"窗口主题已更新为: {current_theme}")
         except Exception as e:
