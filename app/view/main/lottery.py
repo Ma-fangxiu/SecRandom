@@ -114,10 +114,56 @@ class Lottery(QWidget):
         self.reset_button.setFixedHeight(45)
         self.reset_button.clicked.connect(lambda: self.reset_count())
 
+        # 自定义的鼠标事件处理方法，将右键事件转换为左键事件
+        def custom_mouse_press_event(widget, event):
+            if event.button() == Qt.MouseButton.RightButton:
+                # 将右键按下事件转换为左键按下事件
+                new_event = QMouseEvent(
+                    QEvent.Type.MouseButtonPress,
+                    event.position(),
+                    Qt.MouseButton.LeftButton,
+                    Qt.MouseButton.LeftButton,
+                    Qt.KeyboardModifier.NoModifier,
+                )
+                QApplication.sendEvent(widget, new_event)
+            else:
+                # 其他事件正常处理
+                PushButton.mousePressEvent(widget, event)
+
+        def custom_mouse_release_event(widget, event):
+            if event.button() == Qt.MouseButton.RightButton:
+                # 将右键释放事件转换为左键释放事件
+                new_event = QMouseEvent(
+                    QEvent.Type.MouseButtonRelease,
+                    event.position(),
+                    Qt.MouseButton.LeftButton,
+                    Qt.MouseButton.NoButton,
+                    Qt.KeyboardModifier.NoModifier,
+                )
+                QApplication.sendEvent(widget, new_event)
+            else:
+                # 其他事件正常处理
+                PushButton.mouseReleaseEvent(widget, event)
+
         self.minus_button = PushButton("-")
         self._set_widget_font(self.minus_button, 20)
         self.minus_button.setFixedSize(45, 45)
         self.minus_button.clicked.connect(lambda: self.update_count(-1))
+        # 禁用右键菜单，兼容触屏
+        self.minus_button.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+
+        # 动态替换按钮的鼠标事件处理方法
+        original_minus_press = self.minus_button.mousePressEvent
+        original_minus_release = self.minus_button.mouseReleaseEvent
+
+        def minus_press_wrapper(event):
+            custom_mouse_press_event(self.minus_button, event)
+
+        def minus_release_wrapper(event):
+            custom_mouse_release_event(self.minus_button, event)
+
+        self.minus_button.mousePressEvent = minus_press_wrapper
+        self.minus_button.mouseReleaseEvent = minus_release_wrapper
 
         # 添加长按连续减功能
         self.minus_button.pressed.connect(lambda: self.start_long_press(-1))
@@ -133,6 +179,21 @@ class Lottery(QWidget):
         self._set_widget_font(self.plus_button, 20)
         self.plus_button.setFixedSize(45, 45)
         self.plus_button.clicked.connect(lambda: self.update_count(1))
+        # 禁用右键菜单，兼容触屏
+        self.plus_button.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+
+        # 动态替换按钮的鼠标事件处理方法
+        original_plus_press = self.plus_button.mousePressEvent
+        original_plus_release = self.plus_button.mouseReleaseEvent
+
+        def plus_press_wrapper(event):
+            custom_mouse_press_event(self.plus_button, event)
+
+        def plus_release_wrapper(event):
+            custom_mouse_release_event(self.plus_button, event)
+
+        self.plus_button.mousePressEvent = plus_press_wrapper
+        self.plus_button.mouseReleaseEvent = plus_release_wrapper
 
         # 添加长按连续加功能
         self.plus_button.pressed.connect(lambda: self.start_long_press(1))
@@ -1164,6 +1225,15 @@ class Lottery(QWidget):
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().setParent(None)
+
+    def eventFilter(self, obj, event):
+        """事件过滤器，处理触屏长按事件"""
+        if obj in (self.minus_button, self.plus_button):
+            if event.type() == QEvent.Type.MouseButtonPress:
+                # 处理左/右键点击，确保长按功能正常
+                return super().eventFilter(obj, event)
+            # 其他事件正常处理
+        return super().eventFilter(obj, event)
 
     def _set_widget_font(self, widget, font_size):
         """为控件设置字体"""
