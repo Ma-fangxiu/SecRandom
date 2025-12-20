@@ -248,7 +248,10 @@ time_settings = {
         "cses_template": {"name": "cses_template.yaml"},
     },
     "EN_US": {
-        "title": {"name": "Time Settings", "description": "Set class break restrictions and schedule import"},
+        "title": {
+            "name": "Time Settings",
+            "description": "Set class break restrictions and schedule import",
+        },
         "class_break_settings": {
             "name": "Class Break Settings",
             "description": "Configure class break restrictions",

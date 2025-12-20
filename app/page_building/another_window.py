@@ -69,10 +69,14 @@ def create_cses_template_viewer_window():
     """
     title = get_content_name_async("time_settings", "template_title")
     window = SimpleWindowTemplate(title, width=700, height=500)
-    window.add_page_from_template("cses_template_viewer", cses_template_viewer_window_template)
+    window.add_page_from_template(
+        "cses_template_viewer", cses_template_viewer_window_template
+    )
     window.switch_to_page("cses_template_viewer")
     _window_instances["cses_template_viewer"] = window
-    window.windowClosed.connect(lambda: _window_instances.pop("cses_template_viewer", None))
+    window.windowClosed.connect(
+        lambda: _window_instances.pop("cses_template_viewer", None)
+    )
     window.show()
     return
 
