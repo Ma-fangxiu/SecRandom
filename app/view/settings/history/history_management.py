@@ -72,7 +72,19 @@ class roll_call_history(GroupHeaderCardWidget):
 
         # 选择班级下拉框
         self.class_name_combo = ComboBox()
-        self.refresh_class_list()  # 初始化班级列表
+
+        # 清除历史记录按钮
+        self.clear_roll_call_history_button = PushButton(
+            get_content_pushbutton_name_async(
+                "history_management", "clear_roll_call_history"
+            )
+        )
+        self.clear_roll_call_history_button.clicked.connect(
+            lambda: self.clear_roll_call_history()
+        )
+
+        # 初始化班级列表
+        self.refresh_class_list()
         saved_index = readme_settings_async("history_management", "select_class_name")
         if (
             isinstance(saved_index, int)
@@ -95,15 +107,8 @@ class roll_call_history(GroupHeaderCardWidget):
                 self.class_name_combo.currentIndex(),
             )
         )
-
-        # 清除历史记录按钮
-        self.clear_roll_call_history_button = PushButton(
-            get_content_pushbutton_name_async(
-                "history_management", "clear_roll_call_history"
-            )
-        )
-        self.clear_roll_call_history_button.clicked.connect(
-            self.clear_roll_call_history
+        self.class_name_combo.currentIndexChanged.connect(
+            self.update_clear_button_state
         )
 
         # 添加设置项到分组
@@ -132,6 +137,9 @@ class roll_call_history(GroupHeaderCardWidget):
 
         # 设置文件系统监视器
         self.setup_file_watcher()
+
+        # 初始化清除按钮状态
+        self.update_clear_button_state()
 
     def clear_roll_call_history(self):
         """清除点名历史记录"""
@@ -189,7 +197,7 @@ class roll_call_history(GroupHeaderCardWidget):
                     ).format(name=class_name),
                     parent=self,
                     duration=3000,
-                    position="top",
+                    position=InfoBarPosition.TOP,
                 )
             except Exception as e:
                 logger.error(f"清除点名历史记录失败: {e}")
@@ -203,7 +211,7 @@ class roll_call_history(GroupHeaderCardWidget):
                     ).format(error=e),
                     parent=self,
                     duration=5000,
-                    position="top",
+                    position=InfoBarPosition.TOP,
                 )
 
     def setup_file_watcher(self):
@@ -260,6 +268,20 @@ class roll_call_history(GroupHeaderCardWidget):
 
         # logger.debug(f"班级列表已刷新，共 {len(class_list)} 个班级")
 
+        # 更新清除按钮状态
+        self.update_clear_button_state()
+
+    def update_clear_button_state(self):
+        """更新清除按钮的状态（启用/禁用）"""
+        class_name = self.class_name_combo.currentText()
+        if not class_name:
+            self.clear_roll_call_history_button.setEnabled(False)
+            return
+
+        # 检查历史记录文件是否存在
+        history_file_path = get_history_file_path("roll_call", class_name)
+        self.clear_roll_call_history_button.setEnabled(history_file_path.exists())
+
 
 class lottery_history(GroupHeaderCardWidget):
     def __init__(self, parent=None):
@@ -292,7 +314,17 @@ class lottery_history(GroupHeaderCardWidget):
 
         # 选择奖池下拉框
         self.pool_name_combo = ComboBox()
-        self.refresh_pool_list()  # 初始化奖池列表
+
+        # 清除历史记录按钮
+        self.clear_lottery_history_button = PushButton(
+            get_content_pushbutton_name_async(
+                "history_management", "clear_lottery_history"
+            )
+        )
+        self.clear_lottery_history_button.clicked.connect(self.clear_lottery_history)
+
+        # 初始化奖池列表
+        self.refresh_pool_list()
         saved_index = readme_settings_async("history_management", "select_pool_name")
         if (
             isinstance(saved_index, int)
@@ -315,14 +347,9 @@ class lottery_history(GroupHeaderCardWidget):
                 self.pool_name_combo.currentIndex(),
             )
         )
-
-        # 清除历史记录按钮
-        self.clear_lottery_history_button = PushButton(
-            get_content_pushbutton_name_async(
-                "history_management", "clear_lottery_history"
-            )
+        self.pool_name_combo.currentIndexChanged.connect(
+            lambda: self.update_clear_button_state()
         )
-        self.clear_lottery_history_button.clicked.connect(self.clear_lottery_history)
 
         # 添加设置项到分组
         self.addGroup(
@@ -379,7 +406,7 @@ class lottery_history(GroupHeaderCardWidget):
             )
         )
 
-        if dialog.exec() == MessageBox.DialogCode.Accepted:
+        if dialog.exec():
             try:
                 # 获取历史记录文件路径
                 history_file_path = get_history_file_path("lottery", pool_name)
@@ -400,7 +427,7 @@ class lottery_history(GroupHeaderCardWidget):
                     ).format(name=pool_name),
                     parent=self,
                     duration=3000,
-                    position="top",
+                    position=InfoBarPosition.TOP,
                 )
             except Exception as e:
                 logger.error(f"清除抽奖历史记录失败: {e}")
@@ -414,7 +441,7 @@ class lottery_history(GroupHeaderCardWidget):
                     ).format(error=e),
                     parent=self,
                     duration=5000,
-                    position="top",
+                    position=InfoBarPosition.BOTTOM_RIGHT,
                 )
 
     def setup_file_watcher(self):
@@ -470,3 +497,17 @@ class lottery_history(GroupHeaderCardWidget):
             )
 
         # logger.debug(f"奖池列表已刷新，共 {len(pool_list)} 个奖池")
+
+        # 更新清除按钮状态
+        self.update_clear_button_state()
+
+    def update_clear_button_state(self):
+        """更新清除按钮的状态（启用/禁用）"""
+        pool_name = self.pool_name_combo.currentText()
+        if not pool_name:
+            self.clear_lottery_history_button.setEnabled(False)
+            return
+
+        # 检查历史记录文件是否存在
+        history_file_path = get_history_file_path("lottery", pool_name)
+        self.clear_lottery_history_button.setEnabled(history_file_path.exists())
