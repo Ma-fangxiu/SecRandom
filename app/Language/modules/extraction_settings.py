@@ -49,6 +49,10 @@ roll_call_settings = {
             "description": "设置点名抽取方式",
             "combo_items": ["随机抽取", "公平抽取"],
         },
+        "default_class": {
+            "name": "默认抽取名单",
+            "description": "设置默认抽取名单",
+        },
         "font_size": {"name": "字体大小", "description": "设置点名结果字体大小"},
         "display_format": {
             "name": "结果显示格式",
@@ -330,6 +334,10 @@ quick_draw_settings = {
             "description": "设置闪抽抽取方式",
             "combo_items": ["随机抽取", "公平抽取"],
         },
+        "default_class": {
+            "name": "默认抽取名单",
+            "description": "设置默认使用的抽取名单",
+        },
         "font_size": {"name": "字体大小", "description": "设置闪抽结果字体大小"},
         "display_format": {
             "name": "结果显示格式",
@@ -426,6 +434,10 @@ quick_draw_settings = {
             "name": "Picking method",
             "description": "Set Quick Pick method",
             "combo_items": {"0": "Random pick", "1": "Fair pick"},
+        },
+        "default_class": {
+            "name": "Default picking list",
+            "description": "Set the default list used for extraction",
         },
         "font_size": {
             "name": "Font size",
@@ -536,6 +548,10 @@ instant_draw_settings = {
             "description": "设置即抽抽取方式",
             "combo_items": ["随机抽取", "公平抽取"],
         },
+        "default_class": {
+            "name": "默认抽取名单",
+            "description": "设置默认使用的抽取名单",
+        },
         "font_size": {"name": "字体大小", "description": "设置即抽结果字体大小"},
         "display_format": {
             "name": "结果显示格式",
@@ -635,6 +651,10 @@ instant_draw_settings = {
             "name": "Picking method",
             "description": "Set Instant Pick method",
             "combo_items": {"0": "Random pick", "1": "Fair pick"},
+        },
+        "default_class": {
+            "name": "Default picking list",
+            "description": "Set the default list used for extraction",
         },
         "font_size": {
             "name": "Font size",
@@ -744,6 +764,10 @@ lottery_settings = {
             "name": "抽取方式",
             "description": "设置抽奖抽取方式",
             "combo_items": ["随机抽取", "公平抽取"],
+        },
+        "default_pool": {
+            "name": "默认抽取名单",
+            "description": "设置默认使用的抽取名单",
         },
         "font_size": {"name": "字体大小", "description": "设置抽奖结果字体大小"},
         "display_format": {
