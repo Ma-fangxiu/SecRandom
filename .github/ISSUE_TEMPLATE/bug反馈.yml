@@ -141,7 +141,7 @@ body:
 
       render: shell
 
-  - type: file
+  - type: textarea
 
     id: diagnostics
 
