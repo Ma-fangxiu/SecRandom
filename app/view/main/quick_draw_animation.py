@@ -7,6 +7,7 @@ from loguru import logger
 
 from app.common.data.list import *
 from app.common.display.result_display import *
+from app.common.history.history import *
 from app.tools.settings_access import *
 from app.common.music.music_player import music_player
 
@@ -310,17 +311,35 @@ class QuickDrawAnimation(QObject):
         logger.debug("_record_drawn_student: 记录已抽取的学生")
 
         try:
-            from app.tools.config import record_drawn_student
-
             # 检查是否需要记录已抽取学生（半重复设置大于0）
             half_repeat = quick_draw_settings.get("half_repeat", 0)
             if half_repeat > 0:
+                # 使用原有的记录方法
+                from app.tools.config import record_drawn_student
+
                 record_drawn_student(
                     class_name=self.roll_call_widget.final_class_name,
                     gender=self.roll_call_widget.final_gender_filter,
                     group=self.roll_call_widget.final_group_filter,
                     student_name=self.roll_call_widget.final_selected_students,
                 )
+
+            # 使用save_roll_call_history记录历史
+            if (
+                hasattr(self.roll_call_widget, "final_selected_students_dict")
+                and self.roll_call_widget.final_selected_students_dict
+            ):
+                selected_students_dict = (
+                    self.roll_call_widget.final_selected_students_dict
+                )
+                # 保存历史记录
+                save_roll_call_history(
+                    class_name=self.roll_call_widget.final_class_name,
+                    selected_students=selected_students_dict,
+                    group_filter=self.roll_call_widget.final_group_filter,
+                    gender_filter=self.roll_call_widget.final_gender_filter,
+                )
+
         except Exception as e:
             logger.error(f"_record_drawn_student: 记录已抽取学生失败: {e}")
 
