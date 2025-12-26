@@ -249,6 +249,9 @@ class lottery_extraction_function(GroupHeaderCardWidget):
 
         # 根据抽取模式设置不同的控制逻辑
         if draw_mode_index == 0:  # 重复抽取模式
+            # 暂时屏蔽信号，防止修改选项时触发不必要的更新
+            self.clear_record_combo.blockSignals(True)
+
             # 禁用清除抽取记录方式下拉框
             self.clear_record_combo.setEnabled(False)
             # 清空当前选项
@@ -260,6 +263,10 @@ class lottery_extraction_function(GroupHeaderCardWidget):
             )
             # 强制设置为"无需清除"（索引2）
             self.clear_record_combo.setCurrentIndex(2)
+
+            # 恢复信号
+            self.clear_record_combo.blockSignals(False)
+
             # 更新设置
             update_settings("lottery_settings", "clear_record", 2)
 
@@ -274,6 +281,9 @@ class lottery_extraction_function(GroupHeaderCardWidget):
             # 启用清除抽取记录方式下拉框
             self.clear_record_combo.setEnabled(True)
 
+            # 暂时屏蔽信号，防止clear()触发更新导致设置被覆盖
+            self.clear_record_combo.blockSignals(True)
+
             # 清空当前选项
             self.clear_record_combo.clear()
 
@@ -282,8 +292,21 @@ class lottery_extraction_function(GroupHeaderCardWidget):
                 get_content_combo_name_async("lottery_settings", "clear_record")
             )
 
-            # 设置默认选择第一个选项
-            self.clear_record_combo.setCurrentIndex(0)
+            # 读取保存的设置
+            saved_clear_record = readme_settings_async(
+                "lottery_settings", "clear_record"
+            )
+
+            # 检查保存的设置是否有效
+            if 0 <= saved_clear_record < self.clear_record_combo.count():
+                self.clear_record_combo.setCurrentIndex(saved_clear_record)
+            else:
+                self.clear_record_combo.setCurrentIndex(0)
+                update_settings("lottery_settings", "clear_record", 0)
+
+            # 恢复信号
+            self.clear_record_combo.blockSignals(False)
+
             # 更新设置
             update_settings("lottery_settings", "clear_record", 0)
 
