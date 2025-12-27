@@ -573,7 +573,7 @@ class MainWindow(FluentWindow):
         """重启应用程序
         执行安全验证后重启程序，清理所有资源"""
         try:
-            working_dir = str(get_app_root())
+            working_dir = get_app_root()
 
             filtered_args = [arg for arg in sys.argv if not arg.startswith("--")]
 
