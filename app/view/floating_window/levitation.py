@@ -41,12 +41,13 @@ class LevitationWindow(QWidget):
     DEFAULT_DISPLAY_STYLE = 0
     DEFAULT_EDGE_THRESHOLD = 5
     DEFAULT_RETRACT_SECONDS = 5
-    DEFAULT_LONG_PRESS_MS = 500
+    DEFAULT_LONG_PRESS_MS = 150  # 默认长按时间，稍微增加避免误触发
     DEFAULT_BUTTON_SIZE = QSize(60, 60)
     DEFAULT_ICON_SIZE = QSize(24, 24)
     DEFAULT_SPACING = 6
     DEFAULT_MARGINS = 6  # 贴边隐藏时的最小间距
-    DRAG_THRESHOLD = 3  # 拖拽触发阈值
+    DRAG_THRESHOLD = 8  # 拖拽触发阈值，增加阈值避免误识别按钮点击为拖动
+    MIN_DRAG_TIME = 50  # 最小拖动识别时间（毫秒），避免极短时间内的移动被识别为拖动
 
     def __init__(self, parent=None):
         """初始化悬浮窗窗口"""
@@ -106,7 +107,9 @@ class LevitationWindow(QWidget):
         self._drag_timer.timeout.connect(self._begin_drag)
         self._dragging = False
         self._press_pos = QPoint()
-        self._draggable = True
+        self._press_time = 0  # 鼠标按下时间戳
+        self._click_intent = False  # 标记是否为点击意图
+        # 拖拽属性将在 _init_settings() 中从配置读取
 
     def _init_edge_properties(self):
         """初始化贴边隐藏相关属性"""
@@ -307,15 +310,18 @@ class LevitationWindow(QWidget):
 
     def _get_bool_setting(self, section: str, key: str, default: bool = False) -> bool:
         """获取布尔类型设置"""
-        return bool(readme_settings_async(section, key) or default)
+        result = readme_settings_async(section, key)
+        return bool(result) if result is not None else default
 
     def _get_int_setting(self, section: str, key: str, default: int = 0) -> int:
         """获取整数类型设置"""
-        return int(readme_settings_async(section, key) or default)
+        result = readme_settings_async(section, key)
+        return int(result) if result is not None else default
 
     def _get_float_setting(self, section: str, key: str, default: float = 0.0) -> float:
         """获取浮点数类型设置"""
-        return float(readme_settings_async(section, key) or default)
+        result = readme_settings_async(section, key)
+        return float(result) if result is not None else default
 
     def _init_edge_hide_settings(self):
         """初始化贴边隐藏功能设置"""
@@ -649,26 +655,41 @@ class LevitationWindow(QWidget):
             self._bottom.layout().addWidget(btn, 0, Qt.AlignCenter)
 
     def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton and self._draggable:
+        if e.button() == Qt.LeftButton:
+            if not self._draggable:
+                return  # 如果不可拖动，直接返回
             self._press_pos = e.globalPosition().toPoint()
+            self._press_time = e.timestamp()  # 记录鼠标按下时间戳
             self._dragging = False
             self._drag_timer.stop()
             self._drag_timer.start(self._long_press_ms)
 
     def _begin_drag(self):
+        if not self._draggable:
+            return
         self._dragging = True
         self.setCursor(Qt.ClosedHandCursor)
         pass
 
     def mouseMoveEvent(self, e):
         """处理鼠标移动事件"""
-        if e.buttons() & Qt.LeftButton and self._draggable:
+        # 如果不可拖动，停止任何正在进行的拖动
+        if not self._draggable:
+            if self._dragging:
+                self._dragging = False
+                self.setCursor(Qt.ArrowCursor)
+            return
+
+        if e.buttons() & Qt.LeftButton:
             cur = e.globalPosition().toPoint()
 
-            # 检查是否需要开始拖拽
+            # 检查是否需要开始拖拽，添加时间检测避免误识别点击为拖动
             if not self._dragging:
                 delta = cur - self._press_pos
-                if self._should_start_drag(delta):
+                press_duration = (
+                    e.timestamp() - self._press_time if self._press_time > 0 else 0
+                )
+                if self._should_start_drag(delta, press_duration):
                     self._begin_drag()
 
             # 执行拖拽
@@ -682,23 +703,34 @@ class LevitationWindow(QWidget):
         if e.button() == Qt.LeftButton:
             self._drag_timer.stop()
             self.setCursor(Qt.ArrowCursor)
-            if self._draggable and self._dragging:
+            if self._dragging:
                 self._dragging = False
-                self._save_position()
+                # 只有在可拖动且是用户主动拖动的情况下才保存位置
+                if self._draggable:
+                    self._save_position()
 
-    def _should_start_drag(self, delta: QPoint) -> bool:
+    def _should_start_drag(self, delta: QPoint, duration: int = 0) -> bool:
         """判断是否应该开始拖拽
 
         Args:
             delta: 鼠标移动偏移量
+            duration: 鼠标按下持续时间（毫秒）
 
         Returns:
             是否应该开始拖拽
         """
-        return (
-            abs(delta.x()) >= self.DRAG_THRESHOLD
-            or abs(delta.y()) >= self.DRAG_THRESHOLD
-        )
+        # 智能拖动检测：根据持续时间调整识别阈值
+        # 1. 首先检查最小时间阈值，避免极短时间内的移动被识别为拖动
+        if duration < self.MIN_DRAG_TIME:
+            return False  # 时间太短，不识别为拖动
+
+        # 2. 根据持续时间调整距离阈值
+        min_distance = self.DRAG_THRESHOLD
+        if duration < 150:  # 快速点击（100-150ms）
+            min_distance = self.DRAG_THRESHOLD * 2  # 需要较大的移动距离
+        # duration >= 150ms 正常使用默认阈值
+
+        return abs(delta.x()) >= min_distance or abs(delta.y()) >= min_distance
 
     def eventFilter(self, obj, event):
         """事件过滤器，处理拖拽相关事件"""
@@ -717,7 +749,11 @@ class LevitationWindow(QWidget):
     def _handle_mouse_press_event(self, event) -> bool:
         """处理鼠标按下事件"""
         if event.button() == Qt.LeftButton:
+            if not self._draggable:
+                # 如果不可拖动，不启动拖动计时器
+                return False
             self._press_pos = event.globalPosition().toPoint()
+            self._press_time = event.timestamp()  # 记录时间戳
             self._dragging = False
             self._drag_timer.stop()
             self._drag_timer.start(self._long_press_ms)
@@ -725,13 +761,23 @@ class LevitationWindow(QWidget):
 
     def _handle_mouse_move_event(self, event) -> bool:
         """处理鼠标移动事件"""
+        # 如果不可拖动，停止拖动操作
+        if not self._draggable:
+            if self._dragging:
+                self._dragging = False
+                self.setCursor(Qt.ArrowCursor)
+            return False
+
         if event.buttons() & Qt.LeftButton:
             cur = event.globalPosition().toPoint()
 
-            # 检查是否需要开始拖拽
+            # 检查是否需要开始拖拽，添加时间检测避免误识别点击为拖动
             if not self._dragging:
                 delta = cur - self._press_pos
-                if self._should_start_drag(delta):
+                press_duration = (
+                    event.timestamp() - self._press_time if self._press_time > 0 else 0
+                )
+                if self._should_start_drag(delta, press_duration):
                     self._begin_drag()
 
             # 执行拖拽
@@ -747,9 +793,14 @@ class LevitationWindow(QWidget):
         """处理鼠标释放事件"""
         if event.button() == Qt.LeftButton:
             self._drag_timer.stop()
-            if self._dragging:
+            # 如果不可拖动，但仍在拖动状态，则结束拖动操作
+            if self._draggable and self._dragging:
                 self._end_drag_operation()
                 return True
+            elif not self._draggable and self._dragging:
+                # 如果不可拖动但仍在拖动状态，强制结束拖动
+                self._dragging = False
+                self.setCursor(Qt.ArrowCursor)
 
         return False
 
@@ -1461,6 +1512,18 @@ class LevitationWindow(QWidget):
             elif second == "floating_window_opacity":
                 self._opacity = float(value or 0.8)
                 self.setWindowOpacity(self._opacity)
+            elif second == "floating_window_draggable":
+                old_draggable = self._draggable
+                self._draggable = bool(value)
+                # 如果禁用拖拽，停止正在进行的拖拽操作
+                if not self._draggable and old_draggable:
+                    # 强制停止所有拖动相关的操作
+                    self._dragging = False
+                    self._storage_dragging = False  # 如果存在存储窗口拖动也要停止
+                    self.setCursor(Qt.ArrowCursor)
+                    self._drag_timer.stop()
+                    # 确保结束任何可能的拖动状态，但不保存位置（因为这是设置更改，不是用户拖动操作）
+                    self._stick_to_nearest_edge()
             elif second == "floating_window_placement":
                 self._placement = int(value or 0)
                 self.rebuild_ui()
@@ -1483,15 +1546,13 @@ class LevitationWindow(QWidget):
                 self._retract_seconds = int(value or 0)
                 self.custom_retract_time = int(value or 5)
             elif second == "floating_window_long_press_duration":
-                self._long_press_ms = int(value or 500)
+                self._long_press_ms = int(value or 100)
             elif second == "floating_window_stick_to_edge_display_style":
                 self._stick_indicator_style = int(value or 0)
                 self.custom_display_mode = int(value or 1)
             elif second == "floating_window_button_control":
                 self._buttons_spec = self._map_button_control(int(value or 0))
                 self.rebuild_ui()
-            elif second == "floating_window_draggable":
-                self._draggable = bool(value)
             # 当任何影响外观的设置改变时，重新应用主题样式
             self._apply_theme_style()
         elif first == "float_position":
@@ -1540,6 +1601,21 @@ class DraggableWidget(QWidget):
         self._long_press_timer.timeout.connect(self._on_long_press)
         self._long_press_triggered = False  # 标记是否触发长按
         self._init_keep_top_timer()  # 初始化保持置顶定时器
+
+    def is_draggable_enabled(self):
+        """检查主窗口是否允许拖动"""
+        # 获取主窗口实例
+        main_window = None
+        parent = self.parent()
+        while parent:
+            if hasattr(parent, "_draggable"):
+                main_window = parent
+                break
+            parent = parent.parent()
+
+        if main_window and hasattr(main_window, "_draggable"):
+            return main_window._draggable
+        return True  # 默认允许拖动
 
     def setFixedX(self, x):
         """设置固定的x坐标"""
@@ -1600,6 +1676,13 @@ class DraggableWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         """鼠标移动事件 - 只允许在y轴移动，x轴位置固定"""
+        # 如果主窗口不允许拖动，停止任何正在进行的拖动
+        if not self.is_draggable_enabled():
+            if self._dragging:
+                self._dragging = False
+                self.setCursor(Qt.ArrowCursor)
+            return
+
         if event.buttons() & Qt.LeftButton:
             current_time = QDateTime.currentMSecsSinceEpoch()
             if self._long_press_triggered or (
