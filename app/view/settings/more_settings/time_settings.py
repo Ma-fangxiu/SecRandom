@@ -59,13 +59,10 @@ class class_break_settings(GroupHeaderCardWidget):
         self.class_break_switch.setOnText(
             get_content_name_async("time_settings", "enable")
         )
-
-        # 从设置中读取当前状态
         instant_draw_disable = readme_settings_async(
-            "time_settings", "instant_draw_disable", False
+            "time_settings", "instant_draw_disable"
         )
         self.class_break_switch.setChecked(instant_draw_disable)
-
         self.class_break_switch.checkedChanged.connect(
             lambda: update_settings(
                 "time_settings",
@@ -82,13 +79,10 @@ class class_break_settings(GroupHeaderCardWidget):
         self.verification_switch.setOnText(
             get_content_name_async("time_settings", "enable")
         )
-
-        # 从设置中读取当前状态
         verification_required = readme_settings_async(
-            "time_settings", "verification_required", False
+            "time_settings", "verification_required"
         )
         self.verification_switch.setChecked(verification_required)
-
         self.verification_switch.checkedChanged.connect(
             lambda: update_settings(
                 "time_settings",
@@ -105,13 +99,10 @@ class class_break_settings(GroupHeaderCardWidget):
         self.class_island_source_switch.setOnText(
             get_content_name_async("time_settings", "enable")
         )
-
-        # 从设置中读取当前状态
         class_island_source_enabled = readme_settings_async(
-            "time_settings", "class_island_source_enabled", False
+            "time_settings", "class_island_source_enabled"
         )
         self.class_island_source_switch.setChecked(class_island_source_enabled)
-
         self.class_island_source_switch.checkedChanged.connect(
             lambda: update_settings(
                 "time_settings",

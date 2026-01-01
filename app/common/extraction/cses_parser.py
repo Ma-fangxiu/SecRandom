@@ -182,6 +182,168 @@ class CSESParser:
             logger.error(f"无法解析时间: {time_str}")
             raise ValueError(f"无法解析时间: {time_str}") from None
 
+    def _parse_time_string_to_seconds(self, time_val: str | int) -> int:
+        """将时间字符串或整数转换为总秒数
+
+        Args:
+            time_val: 时间字符串 (HH:MM 或 HH:MM:SS) 或整数秒数
+
+        Returns:
+            int: 时间的总秒数
+
+        Raises:
+            ValueError: 时间格式错误
+        """
+        # 如果已经是整数（秒数），直接返回
+        if isinstance(time_val, int):
+            return time_val
+
+        # 转换为字符串处理
+        time_str = str(time_val)
+
+        try:
+            if ":" in time_str:
+                parts = time_str.split(":")
+                if len(parts) == 2:
+                    return int(parts[0]) * 3600 + int(parts[1]) * 60
+                elif len(parts) == 3:
+                    return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+            # 尝试直接转换为整数（可能是纯数字字符串）
+            return int(time_str)
+        except (ValueError, IndexError):
+            logger.error(f"无法解析时间字符串: {time_val}")
+            raise ValueError(f"无法解析时间字符串: {time_val}") from None
+
+    def get_class_times_by_day(self, day_of_week: int) -> Dict[str, str]:
+        """获取指定星期几的上课时间段
+
+        Args:
+            day_of_week: 星期几（1=星期一，7=星期日）
+
+        Returns:
+            Dict[str, str]: 上课时间段字典，格式为 {"name": "HH:MM:SS-HH:MM:SS"}
+        """
+        if not self.schedule_data:
+            return {}
+
+        class_times = {}
+        schedule = self.schedule_data.get("schedule", {})
+        timeslots = schedule.get("timeslots", [])
+
+        # 过滤指定星期几的有效时间段
+        valid_timeslots = [
+            slot
+            for slot in timeslots
+            if isinstance(slot, dict)
+            and slot.get("start_time")
+            and slot.get("end_time")
+            and slot.get("day_of_week") == day_of_week
+        ]
+
+        # 按照实际时间值排序时间段
+        def get_time_key(slot):
+            """获取用于排序的时间键值"""
+            time_str = str(slot.get("start_time", ""))
+            return self._parse_time_string_to_seconds(time_str)
+
+        sorted_timeslots = sorted(valid_timeslots, key=get_time_key)
+
+        # 构建上课时间段列表
+        for i, timeslot in enumerate(sorted_timeslots):
+            start_time = self._format_time_for_secrandom(timeslot.get("start_time", ""))
+            end_time = self._format_time_for_secrandom(timeslot.get("end_time", ""))
+            class_name = timeslot.get("name", f"课程_{i + 1}")
+            class_times[class_name] = f"{start_time}-{end_time}"
+
+        logger.info(f"成功获取星期{day_of_week}的{len(class_times)}个上课时间段")
+        return class_times
+
+    def get_class_times_by_day_with_week(
+        self, day_of_week: int, week_type: str = "all"
+    ) -> Dict[str, str]:
+        """获取指定星期几和周数的上课时间段
+
+        Args:
+            day_of_week: 星期几（1=星期一，7=星期日）
+            week_type: 周数类型（"all"=所有周，"odd"=单数周，"even"=双数周）
+
+        Returns:
+            Dict[str, str]: 上课时间段字典，格式为 {"name": "HH:MM:SS-HH:MM:SS"}
+        """
+        if not self.schedule_data:
+            return {}
+
+        class_times = {}
+        schedules = self.schedule_data.get("schedules", [])
+
+        # 过滤指定星期几和周数的schedule
+        valid_schedules = []
+        for sched in schedules:
+            if isinstance(sched, dict) and sched.get("enable_day") == day_of_week:
+                sched_weeks = sched.get("weeks", "all")
+                if (
+                    week_type == "all"
+                    or sched_weeks == "all"
+                    or sched_weeks == week_type
+                ):
+                    valid_schedules.append(sched)
+
+        # 合并所有符合条件的schedule中的classes
+        all_classes = []
+        for sched in valid_schedules:
+            classes = sched.get("classes", [])
+            if isinstance(classes, list):
+                all_classes.extend(classes)
+
+        # 构建科目-老师映射表
+        subject_teacher_map = {}
+        subjects = self.schedule_data.get("subjects")
+        if subjects and isinstance(subjects, list):
+            for subject in subjects:
+                if isinstance(subject, dict):
+                    name = subject.get("name")
+                    teacher = subject.get("teacher")
+                    if name and teacher:
+                        subject_teacher_map[name] = teacher
+
+        # 转换为时间段格式
+        timeslots = []
+        for cls in all_classes:
+            if isinstance(cls, dict):
+                teacher = cls.get("teacher", "")
+                if not teacher:
+                    teacher = subject_teacher_map.get(cls.get("subject", ""), "")
+
+                timeslot = {
+                    "name": cls.get("subject", ""),
+                    "start_time": cls.get("start_time"),
+                    "end_time": cls.get("end_time"),
+                    "teacher": teacher,
+                    "location": cls.get("room", ""),
+                    "day_of_week": day_of_week,
+                }
+                timeslots.append(timeslot)
+
+        # 按照实际时间值排序时间段
+        def get_time_key(slot):
+            """获取用于排序的时间键值"""
+            time_str = str(slot.get("start_time", ""))
+            return self._parse_time_string_to_seconds(time_str)
+
+        sorted_timeslots = sorted(timeslots, key=get_time_key)
+
+        # 构建上课时间段列表
+        for i, timeslot in enumerate(sorted_timeslots):
+            start_time = self._format_time_for_secrandom(timeslot.get("start_time", ""))
+            end_time = self._format_time_for_secrandom(timeslot.get("end_time", ""))
+            class_name = timeslot.get("name", f"课程_{i + 1}")
+            class_times[class_name] = f"{start_time}-{end_time}"
+
+        logger.info(
+            f"成功获取星期{day_of_week}（{week_type}周）的{len(class_times)}个上课时间段"
+        )
+        return class_times
+
     def get_non_class_times(self) -> Dict[str, str]:
         """获取非上课时间段配置
 
@@ -197,7 +359,7 @@ class CSESParser:
         schedule = self.schedule_data.get("schedule", {})
         timeslots = schedule.get("timeslots", [])
 
-        # 过滤并排序有效的时间段
+        # 过滤有效的时间段
         valid_timeslots = [
             slot
             for slot in timeslots
@@ -205,38 +367,57 @@ class CSESParser:
             and slot.get("start_time")
             and slot.get("end_time")
         ]
-        # 确保start_time为字符串类型后再排序
-        sorted_timeslots = sorted(
-            valid_timeslots, key=lambda x: str(x.get("start_time", ""))
-        )
 
-        # 构建上课时间段列表
-        class_periods = []
-        for timeslot in sorted_timeslots:
-            start_time = self._format_time_for_secrandom(timeslot.get("start_time", ""))
-            end_time = self._format_time_for_secrandom(timeslot.get("end_time", ""))
-            class_periods.append((start_time, end_time))
+        # 按星期几分组时间段
+        timeslots_by_day = {}
+        for slot in valid_timeslots:
+            day = slot.get("day_of_week", 0)  # 默认星期一
+            if day not in timeslots_by_day:
+                timeslots_by_day[day] = []
+            timeslots_by_day[day].append(slot)
 
-        # 生成非上课时间段
-        # 1. 第一节课之前的时间
-        if class_periods:
-            first_start = class_periods[0][0]
-            if first_start != "00:00:00":
-                non_class_times["before_first_class"] = f"00:00:00-{first_start}"
+        # 为每一天生成非上课时间段
+        for day, day_timeslots in timeslots_by_day.items():
+            # 按照实际时间值排序当天的时间段
+            def get_time_key(slot):
+                """获取用于排序的时间键值"""
+                time_str = str(slot.get("start_time", ""))
+                return self._parse_time_string_to_seconds(time_str)
 
-        # 2. 课间时间（两节课之间）
-        for i in range(len(class_periods) - 1):
-            current_end = class_periods[i][1]
-            next_start = class_periods[i + 1][0]
-            if current_end != next_start:
-                period_name = f"break_{i + 1}"
-                non_class_times[period_name] = f"{current_end}-{next_start}"
+            sorted_timeslots = sorted(day_timeslots, key=get_time_key)
 
-        # 3. 最后一节课之后的时间
-        if class_periods:
-            last_end = class_periods[-1][1]
-            if last_end != "23:59:59":
-                non_class_times["after_last_class"] = f"{last_end}-23:59:59"
+            # 构建当天的上课时间段列表
+            class_periods = []
+            for timeslot in sorted_timeslots:
+                start_time = self._format_time_for_secrandom(
+                    timeslot.get("start_time", "")
+                )
+                end_time = self._format_time_for_secrandom(timeslot.get("end_time", ""))
+                class_periods.append((start_time, end_time))
+
+            # 生成当天的非上课时间段
+            if class_periods:
+                # 1. 当天第一节课之前的时间
+                first_start = class_periods[0][0]
+                if first_start != "00:00:00":
+                    non_class_times[f"day_{day}_before_first_class"] = (
+                        f"00:00:00-{first_start}"
+                    )
+
+                # 2. 当天课间时间（两节课之间）
+                for i in range(len(class_periods) - 1):
+                    current_end = class_periods[i][1]
+                    next_start = class_periods[i + 1][0]
+                    if current_end != next_start:
+                        period_name = f"day_{day}_break_{i + 1}"
+                        non_class_times[period_name] = f"{current_end}-{next_start}"
+
+                # 3. 当天最后一节课之后的时间
+                last_end = class_periods[-1][1]
+                if last_end != "23:59:59":
+                    non_class_times[f"day_{day}_after_last_class"] = (
+                        f"{last_end}-23:59:59"
+                    )
 
         logger.info(f"成功解析CSES课程表，生成{len(non_class_times)}个非上课时间段")
         return non_class_times

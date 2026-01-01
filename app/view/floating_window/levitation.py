@@ -451,9 +451,14 @@ class LevitationWindow(QWidget):
                 return
 
             # 检查当前时间是否在非上课时间段内
-            if _is_non_class_time():
+            is_non_class_time = _is_non_class_time()
+            logger.debug(f"当前时间是否在非上课时间段内: {is_non_class_time}")
+            if is_non_class_time:
                 # 检查是否需要验证流程
-                if readme_settings_async("time_settings", "verification_required"):
+                verification_required = readme_settings_async(
+                    "time_settings", "verification_required"
+                )
+                if verification_required:
                     # 如果需要验证流程，弹出密码验证窗口
                     logger.info("当前时间在非上课时间段内，需要密码验证")
                     require_and_run(

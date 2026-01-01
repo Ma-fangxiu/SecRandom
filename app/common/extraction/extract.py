@@ -7,6 +7,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtNetwork import *
 
+import os
 import json
 from typing import Dict
 from loguru import logger
@@ -17,6 +18,7 @@ from PySide6.QtCore import QDateTime
 from app.tools.path_utils import *
 from app.common.extraction.cses_parser import CSESParser
 from app.Language.obtain_language import get_content_name_async
+from app.tools.settings_access import readme_settings_async
 
 
 # ==================================================
@@ -33,8 +35,9 @@ def _is_non_class_time() -> bool:
     try:
         # 1. 检查课间禁用开关是否启用
         instant_draw_disable = readme_settings_async(
-            "program_functionality", "instant_draw_disable"
+            "time_settings", "instant_draw_disable"
         )
+        logger.debug(f"课间禁用开关是否启用: {instant_draw_disable}")
         if not instant_draw_disable:
             return False
 
@@ -42,26 +45,36 @@ def _is_non_class_time() -> bool:
         use_class_island_source = readme_settings_async(
             "time_settings", "class_island_source_enabled"
         )
-
+        logger.debug(f"是否启用了ClassIsland数据源: {use_class_island_source}")
         if use_class_island_source:
             # 使用ClassIsland数据判断是否为课间时间
             class_island_break_status = readme_settings_async(
                 "time_settings", "current_class_island_break_status"
             )
+            logger.debug(f"ClassIsland数据源当前课间状态: {class_island_break_status}")
             # 确保返回布尔值
             return bool(class_island_break_status)
         else:
-            # 使用CSES配置的非上课时间段
-            non_class_times = _get_non_class_times_config()
-            if not non_class_times or not isinstance(non_class_times, dict):
-                # 如果非上课时间配置不存在或格式不正确，返回False
+            # 使用CSES配置的上课时间段
+            # 获取当前星期几
+            current_day_of_week = _get_current_day_of_week()
+
+            # 获取当前星期几的上课时间段
+            class_times = _get_class_times_by_day(current_day_of_week)
+            if not class_times or not isinstance(class_times, dict):
+                # 如果没有上课时间配置，默认为上课时间
                 return False
 
-            # 3. 获取当前时间并转换为总秒数
+            # 获取当前时间并转换为总秒数
             current_total_seconds = _get_current_time_in_seconds()
+            logger.debug(f"当前时间总秒数: {current_total_seconds}")
 
-            # 4. 检查当前时间是否在任何非上课时间段内
-            return _is_time_in_ranges(current_total_seconds, non_class_times)
+            # 检查当前时间是否在上课时间段内
+            is_in_class_time = _is_time_in_ranges(current_total_seconds, class_times)
+            logger.debug(f"当前时间是否在上课时间段内: {is_in_class_time}")
+
+            # 如果不在上课时间段内，则是非上课时间
+            return not is_in_class_time
 
     except Exception as e:
         logger.error(f"检测非上课时间失败: {e}")
@@ -82,8 +95,6 @@ def _get_non_class_times_config() -> Dict[str, str]:
             return {}
 
         # 获取CSES目录中的所有YAML文件
-        import os
-
         cses_files = [
             f for f in os.listdir(cses_dir) if f.lower().endswith((".yaml", ".yml"))
         ]
@@ -125,6 +136,60 @@ def _get_current_time_in_seconds() -> int:
     return current_hour * 3600 + current_minute * 60 + current_second
 
 
+def _get_current_day_of_week() -> int:
+    """获取当前是星期几
+
+    Returns:
+        int: 星期几（1=星期一，7=星期日）
+    """
+    current_time = QDateTime.currentDateTime()
+    day_of_week = current_time.date().dayOfWeek()
+    return day_of_week
+
+
+def _get_class_times_by_day(day_of_week: int) -> Dict[str, str]:
+    """获取指定星期几的上课时间段
+
+    Args:
+        day_of_week: 星期几（1=星期一，7=星期日）
+
+    Returns:
+        Dict[str, str]: 上课时间段字典，格式为 {"name": "HH:MM:SS-HH:MM:SS"}
+    """
+    try:
+        cses_dir = get_data_path("CSES")
+        if not os.path.exists(cses_dir):
+            return {}
+
+        cses_files = [
+            f for f in os.listdir(cses_dir) if f.lower().endswith((".yaml", ".yml"))
+        ]
+
+        if not cses_files:
+            return {}
+
+        cses_file_path = os.path.join(cses_dir, cses_files[0])
+
+        parser = CSESParser()
+        if not parser.load_from_file(cses_file_path):
+            return {}
+
+        # 尝试使用带周数的方法，如果失败则使用不带周数的方法
+        try:
+            class_times = parser.get_class_times_by_day_with_week(day_of_week, "all")
+            if class_times:
+                return class_times
+        except Exception:
+            pass
+
+        class_times = parser.get_class_times_by_day(day_of_week)
+        return class_times
+
+    except Exception as e:
+        logger.error(f"获取星期{day_of_week}的上课时间段失败: {e}")
+        return {}
+
+
 def _is_time_in_ranges(current_seconds: int, time_ranges: Dict[str, str]) -> bool:
     """检查当前时间是否在任何一个时间范围内
 
@@ -144,20 +209,14 @@ def _is_time_in_ranges(current_seconds: int, time_ranges: Dict[str, str]) -> boo
 
             start_time_str, end_time_str = start_end
 
-            # 解析开始时间
             start_total_seconds = _parse_time_string_to_seconds(start_time_str)
-
-            # 解析结束时间
             end_total_seconds = _parse_time_string_to_seconds(end_time_str)
 
-            # 检查当前时间是否在该非上课时间段内
             if start_total_seconds <= current_seconds < end_total_seconds:
                 return True
 
         except Exception as e:
-            logger.error(
-                f"解析非上课时间段失败: {range_name} = {time_range}, 错误: {e}"
-            )
+            logger.error(f"解析时间段失败: {range_name} = {time_range}, 错误: {e}")
             continue
 
     return False
