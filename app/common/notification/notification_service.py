@@ -927,8 +927,14 @@ class FloatingNotificationManager:
 
         try:
             cs_ipc = CSharpIPCHandler.instance()
-            cs_ipc.send_notification(class_name, selected_students, draw_count, settings, settings_group)
-            logger.info("成功发送通知到ClassIsland，结果未知")
+            status = cs_ipc.send_notification(class_name, selected_students, draw_count, settings, settings_group)
+            if status:
+                logger.info("成功发送通知到ClassIsland，结果未知")
+            else:
+                logger.info("因错误回退到SecRandom通知服务")
+                self._show_secrandom_notification(
+                    class_name, selected_students, draw_count, settings, settings_group
+                )
         except Exception as e:
             logger.exception("发送通知到ClassIsland时出错: {}", e)
             # 如果发生异常，回退到SecRandom通知服务
