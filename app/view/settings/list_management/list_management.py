@@ -200,7 +200,8 @@ class roll_call_list(GroupHeaderCardWidget):
 
     # 学生名单导入功能
     def import_student_name(self):
-        create_import_student_name_window()
+        class_name = self.class_name_combo.currentText()
+        create_import_student_name_window(class_name=class_name)
         # 显示通知
         config = NotificationConfig(
             title=get_any_position_value_async(
@@ -676,7 +677,8 @@ class lottery_list(GroupHeaderCardWidget):
 
     # 奖品名单导入功能
     def import_prize_name(self):
-        create_import_prize_name_window()
+        pool_name = self.pool_name_combo.currentText()
+        create_import_prize_name_window(pool_name=pool_name)
         # 显示通知
         config = NotificationConfig(
             title=get_any_position_value_async(

@@ -28,7 +28,7 @@ class ImportPrizeNameWindow(QWidget):
     fileLoaded = Signal(object, list)  # 参数：数据，列名列表
     fileLoadError = Signal(str)  # 参数：错误信息
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, pool_name=None):
         """初始化奖品名称导入窗口"""
         # 调用父类初始化方法
         super().__init__(parent)
@@ -39,6 +39,7 @@ class ImportPrizeNameWindow(QWidget):
         self.columns = []
         self.column_mapping = {}
         self.preview_data = []
+        self.pool_name = pool_name
         # 线程池用于后台加载文件
         self.executor = ThreadPoolExecutor(max_workers=2)
 
@@ -62,18 +63,20 @@ class ImportPrizeNameWindow(QWidget):
         self.main_layout.addWidget(self.title_label)
 
         # 创建当前导入奖品的提示标签
-        saved = readme_settings_async("lottery_list", "select_pool_name")
-        if isinstance(saved, int):
-            try:
-                names = get_pool_name_list()
-                current_pool = names[saved] if 0 <= saved < len(names) else ""
-            except Exception:
-                current_pool = str(saved)
-        else:
-            current_pool = str(saved) if saved else ""
+        display_pool_name = self.pool_name if self.pool_name else ""
+        if not display_pool_name:
+            saved = readme_settings_async("lottery_list", "select_pool_name")
+            if isinstance(saved, int):
+                try:
+                    names = get_pool_name_list()
+                    display_pool_name = names[saved] if 0 <= saved < len(names) else ""
+                except Exception:
+                    display_pool_name = str(saved)
+            else:
+                display_pool_name = str(saved) if saved else ""
         self.prize_name_label = SubtitleLabel(
             get_content_name_async("import_prize_name", "initial_subtitle")
-            + current_pool
+            + display_pool_name
         )
         self.main_layout.addWidget(self.prize_name_label)
 

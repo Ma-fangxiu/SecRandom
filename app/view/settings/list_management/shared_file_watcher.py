@@ -6,6 +6,7 @@
 from pathlib import Path
 from PySide6.QtCore import QFileSystemWatcher, Signal, QObject
 from typing import Dict, Set, Callable, Any
+import weakref
 
 
 class SharedFileWatcherManager(QObject):
@@ -74,8 +75,14 @@ class SharedFileWatcherManager(QObject):
         if path_str not in self._callbacks:
             self._callbacks[path_str] = set()
 
-        # 直接存储回调函数，避免弱引用导致的问题
-        self._callbacks[path_str].add(callback)
+        # 使用弱引用包装回调函数，避免内存泄漏
+        if hasattr(callback, "__self__"):
+            # 对于方法，使用弱引用
+            weak_callback = weakref.WeakMethod(callback)
+            self._callbacks[path_str].add(weak_callback)
+        else:
+            # 对于普通函数，直接存储
+            self._callbacks[path_str].add(callback)
 
         return True
 
@@ -97,8 +104,16 @@ class SharedFileWatcherManager(QObject):
 
         # 移除回调函数
         if path_str in self._callbacks:
-            # 直接移除回调函数
-            self._callbacks[path_str].discard(callback)
+            # 根据回调类型使用相应的方式移除
+            if hasattr(callback, "__self__"):
+                # 对于方法，查找对应的弱引用
+                for cb in list(self._callbacks[path_str]):
+                    if isinstance(cb, weakref.WeakMethod) and cb() == callback:
+                        self._callbacks[path_str].discard(cb)
+                        break
+            else:
+                # 对于普通函数，直接移除
+                self._callbacks[path_str].discard(callback)
 
         # 减少引用计数
         self._reference_counts[path_str] -= 1

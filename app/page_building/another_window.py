@@ -56,13 +56,20 @@ class import_student_name_window_template(PageTemplate):
     """学生名单导入窗口类
     使用PageTemplate创建学生名单导入页面"""
 
-    def __init__(self, parent=None):
-        super().__init__(content_widget_class=ImportStudentNameWindow, parent=parent)
+    def __init__(self, parent=None, class_name=None):
+        def factory(parent):
+            return ImportStudentNameWindow(parent=parent, class_name=class_name)
+
+        factory.__name__ = "ImportStudentNameWindow"
+        super().__init__(content_widget_class=factory, parent=parent)
 
 
-def create_import_student_name_window():
+def create_import_student_name_window(class_name=None):
     """
     创建学生名单导入窗口
+
+    Args:
+        class_name: 要导入的班级名称
 
     Returns:
         创建的窗口实例
@@ -70,7 +77,10 @@ def create_import_student_name_window():
     title = get_content_name_async("import_student_name", "title")
     window = SimpleWindowTemplate(title, width=800, height=600)
     window.add_page_from_template(
-        "import_student_name", import_student_name_window_template
+        "import_student_name",
+        lambda parent: import_student_name_window_template(
+            parent=parent, class_name=class_name
+        ),
     )
     window.switch_to_page("import_student_name")
     _window_instances["import_student_name"] = window
@@ -225,13 +235,20 @@ class import_prize_name_window_template(PageTemplate):
     """奖品名单导入窗口类
     使用PageTemplate创建奖品名单导入页面"""
 
-    def __init__(self, parent=None):
-        super().__init__(content_widget_class=ImportPrizeNameWindow, parent=parent)
+    def __init__(self, parent=None, pool_name=None):
+        def factory(parent):
+            return ImportPrizeNameWindow(parent=parent, pool_name=pool_name)
+
+        factory.__name__ = "ImportPrizeNameWindow"
+        super().__init__(content_widget_class=factory, parent=parent)
 
 
-def create_import_prize_name_window():
+def create_import_prize_name_window(pool_name=None):
     """
     创建奖品名单导入窗口
+
+    Args:
+        pool_name: 要导入的奖池名称
 
     Returns:
         创建的窗口实例
@@ -239,7 +256,10 @@ def create_import_prize_name_window():
     title = get_content_name_async("import_prize_name", "title")
     window = SimpleWindowTemplate(title, width=800, height=600)
     window.add_page_from_template(
-        "import_prize_name", import_prize_name_window_template
+        "import_prize_name",
+        lambda parent: import_prize_name_window_template(
+            parent=parent, pool_name=pool_name
+        ),
     )
     window.switch_to_page("import_prize_name")
     _window_instances["import_prize_name"] = window

@@ -28,7 +28,7 @@ class ImportStudentNameWindow(QWidget):
     fileLoaded = Signal(object, list)  # 参数：数据，列名列表
     fileLoadError = Signal(str)  # 参数：错误信息
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, class_name=None):
         """初始化学生姓名导入窗口"""
         # 调用父类初始化方法
         super().__init__(parent)
@@ -39,6 +39,7 @@ class ImportStudentNameWindow(QWidget):
         self.columns = []
         self.column_mapping = {}
         self.preview_data = []
+        self.class_name = class_name
         # 线程池用于后台加载文件
         self.executor = ThreadPoolExecutor(max_workers=2)
 
@@ -62,9 +63,14 @@ class ImportStudentNameWindow(QWidget):
         self.main_layout.addWidget(self.title_label)
 
         # 创建当前导入班级的提示标签
+        display_class_name = (
+            self.class_name
+            if self.class_name
+            else readme_settings_async("roll_call_list", "select_class_name")
+        )
         self.class_name_label = SubtitleLabel(
             get_content_name_async("import_student_name", "initial_subtitle")
-            + readme_settings_async("roll_call_list", "select_class_name")
+            + display_class_name
         )
         self.main_layout.addWidget(self.class_name_label)
 
