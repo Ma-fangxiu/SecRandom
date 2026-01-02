@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import threading
 from typing import Optional
@@ -8,6 +9,9 @@ from app.tools.path_utils import get_data_path
 CSHARP_AVAILABLE = False
 
 try:
+    # 添加 dlls path
+    sys.path.append(str(get_data_path("dlls")))
+
     # 导入 Python.NET
     from pythonnet import load
 
@@ -29,8 +33,9 @@ try:
     from SecRandom4Ci.Interface.Models import CallResult, Student
 
     CSHARP_AVAILABLE = True
-except:
+except Exception as e:
     logger.warning("无法加载 Python.NET，将会回滚！")
+    logger.warning(e)
 
 
 if CSHARP_AVAILABLE:
@@ -60,6 +65,7 @@ if CSHARP_AVAILABLE:
             self.ipc_client: Optional[IpcClient] = None
             self.client_thread: Optional[threading.Thread] = None
             self.is_running = False
+            self.is_connected = False
 
         def start_ipc_client(self) -> bool:
             """
@@ -97,6 +103,11 @@ if CSHARP_AVAILABLE:
             settings_group=None,
         ) -> bool:
             """发送提醒"""
+            if not self.is_running:
+                return False
+
+            if not self.is_connected:
+                return False
 
             if settings:
                 display_duration = settings.get("notification_display_duration", 5)
@@ -167,17 +178,40 @@ if CSHARP_AVAILABLE:
 
                 task = self.ipc_client.Connect()
                 await loop.run_in_executor(None, lambda: task.Wait())
+                self.is_connected = True
 
                 while self.is_running:
                     await asyncio.sleep(1)
 
+                    if not self._check_alive():
+                        logger.warning("C# IPC 断连！重连...")
+                        self.is_connected = False
+
+                        task = self.ipc_client.Connect()
+                        await loop.run_in_executor(None, lambda: task.Wait())
+                        self.is_connected = True
+
+                        logger.info("C# IPC 重连成功！")
+
                 self.ipc_client = None
+                self.is_connected = False
 
             # 启动新的 asyncio 事件循环
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(client())
             loop.close()
+        
+        def _check_alive(self) -> bool:
+            """客户端是否正常连接"""
+            try:
+                randomService = GeneratedIpcFactory.CreateIpcProxy[ISecRandomService](
+                    self.ipc_client.Provider, self.ipc_client.PeerProxy
+                )
+                return randomService.IsAlive() == "Yes"
+            except Exception as e:
+                logger.warning(e)
+                return False
 else:
 
     class CSharpIPCHandler:
@@ -205,6 +239,7 @@ else:
             self.ipc_client = None
             self.client_thread = None
             self.is_running = False
+            self.is_connected = False
 
         def start_ipc_client(self) -> bool:
             """
