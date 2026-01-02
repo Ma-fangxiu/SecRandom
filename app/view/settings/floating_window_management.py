@@ -14,6 +14,7 @@ from app.tools.personalised import *
 from app.tools.settings_default import *
 from app.tools.settings_access import *
 from app.Language.obtain_language import *
+from app.tools.settings_visibility_manager import is_setting_visible
 
 
 # ==================================================
@@ -172,6 +173,27 @@ class floating_window_basic_settings(GroupHeaderCardWidget):
             )
         )
 
+        # 无焦点模式开关
+        self.do_not_steal_focus_switch = SwitchButton()
+        self.do_not_steal_focus_switch.setOffText(
+            get_content_switchbutton_name_async(
+                "floating_window_management", "do_not_steal_focus", "disable"
+            )
+        )
+        self.do_not_steal_focus_switch.setOnText(
+            get_content_switchbutton_name_async(
+                "floating_window_management", "do_not_steal_focus", "enable"
+            )
+        )
+        self.do_not_steal_focus_switch.setChecked(
+            readme_settings_async("floating_window_management", "do_not_steal_focus")
+        )
+        self.do_not_steal_focus_switch.checkedChanged.connect(
+            lambda checked: update_settings(
+                "floating_window_management", "do_not_steal_focus", checked
+            )
+        )
+
         # 添加设置项到分组
         self.addGroup(
             get_theme_icon("ic_fluent_desktop_sync_20_filled"),
@@ -193,26 +215,43 @@ class floating_window_basic_settings(GroupHeaderCardWidget):
             ),
             self.floating_window_opacity_spinbox,
         )
-        self.addGroup(
-            get_theme_icon("ic_fluent_gesture_20_filled"),
-            get_content_name_async(
-                "floating_window_management", "floating_window_draggable"
-            ),
-            get_content_description_async(
-                "floating_window_management", "floating_window_draggable"
-            ),
-            self.floating_window_draggable_switch,
-        )
-        self.addGroup(
-            get_theme_icon("ic_fluent_gesture_20_filled"),
-            get_content_name_async(
-                "floating_window_management", "floating_window_long_press_duration"
-            ),
-            get_content_description_async(
-                "floating_window_management", "floating_window_long_press_duration"
-            ),
-            self.floating_window_long_press_duration_spinbox,
-        )
+        if is_setting_visible(
+            "floating_window_management", "floating_window_draggable"
+        ):
+            self.addGroup(
+                get_theme_icon("ic_fluent_gesture_20_filled"),
+                get_content_name_async(
+                    "floating_window_management", "floating_window_draggable"
+                ),
+                get_content_description_async(
+                    "floating_window_management", "floating_window_draggable"
+                ),
+                self.floating_window_draggable_switch,
+            )
+        if is_setting_visible(
+            "floating_window_management", "floating_window_long_press_duration"
+        ):
+            self.addGroup(
+                get_theme_icon("ic_fluent_gesture_20_filled"),
+                get_content_name_async(
+                    "floating_window_management", "floating_window_long_press_duration"
+                ),
+                get_content_description_async(
+                    "floating_window_management", "floating_window_long_press_duration"
+                ),
+                self.floating_window_long_press_duration_spinbox,
+            )
+        if is_setting_visible("floating_window_management", "do_not_steal_focus"):
+            self.addGroup(
+                get_theme_icon("ic_fluent_lock_open_20_filled"),
+                get_content_name_async(
+                    "floating_window_management", "do_not_steal_focus"
+                ),
+                get_content_description_async(
+                    "floating_window_management", "do_not_steal_focus"
+                ),
+                self.do_not_steal_focus_switch,
+            )
         self.addGroup(
             get_theme_icon("ic_fluent_arrow_reset_20_filled"),
             get_content_name_async(
@@ -337,16 +376,17 @@ class floating_window_appearance_settings(GroupHeaderCardWidget):
             ),
             self.floating_window_display_style_combo_box,
         )
-        self.addGroup(
-            get_theme_icon("ic_fluent_resize_20_filled"),
-            get_content_name_async(
-                "floating_window_management", "floating_window_size"
-            ),
-            get_content_description_async(
-                "floating_window_management", "floating_window_size"
-            ),
-            self.floating_window_size_combo_box,
-        )
+        if is_setting_visible("floating_window_management", "floating_window_size"):
+            self.addGroup(
+                get_theme_icon("ic_fluent_resize_20_filled"),
+                get_content_name_async(
+                    "floating_window_management", "floating_window_size"
+                ),
+                get_content_description_async(
+                    "floating_window_management", "floating_window_size"
+                ),
+                self.floating_window_size_combo_box,
+            )
 
     def floating_window_button_control_combo_box_changed(self, index):
         update_settings(
@@ -461,18 +501,21 @@ class floating_window_edge_settings(GroupHeaderCardWidget):
             ),
             self.floating_window_stick_to_edge_recover_seconds_spinbox,
         )
-        self.addGroup(
-            get_theme_icon("ic_fluent_desktop_sync_20_filled"),
-            get_content_name_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_display_style",
-            ),
-            get_content_description_async(
-                "floating_window_management",
-                "floating_window_stick_to_edge_display_style",
-            ),
-            self.floating_window_stick_to_edge_display_style_combo_box,
-        )
+        if is_setting_visible(
+            "floating_window_management", "floating_window_stick_to_edge_display_style"
+        ):
+            self.addGroup(
+                get_theme_icon("ic_fluent_desktop_sync_20_filled"),
+                get_content_name_async(
+                    "floating_window_management",
+                    "floating_window_stick_to_edge_display_style",
+                ),
+                get_content_description_async(
+                    "floating_window_management",
+                    "floating_window_stick_to_edge_display_style",
+                ),
+                self.floating_window_stick_to_edge_display_style_combo_box,
+            )
 
     def floating_window_stick_to_edge_switch_changed(self, checked):
         update_settings(

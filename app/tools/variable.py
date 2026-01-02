@@ -9,7 +9,7 @@ from datetime import datetime
 # -------------------- 软件基本信息 --------------------
 APPLY_NAME = "SecRandom"  # 软件名称
 VERSION = "v0.0.0"  # 软件当前版本
-NEXT_VERSION = "v2.0.0"  # 软件下一个版本
+NEXT_VERSION = "v2.1.0"  # 软件下一个版本
 CODENAME = "Koharu"  # 软件代号
 SPECIAL_VERSION = VERSION if VERSION != "v0.0.0" else NEXT_VERSION
 SYSTEM = "windows" if os.name == "nt" else "linux"  # 软件系统
@@ -18,11 +18,13 @@ STRUCT = "dir" if SYSTEM == "windows" else "deb"  # 软件结构
 INITIAL_AUTHORING_YEAR = 2025  # 软件发布年份
 CURRENT_YEAR = datetime.now().year  # 软件当前年份
 AUTHOR = "lzy98276"  # 软件作者
-COPYRIGHT_HOLDER = "The SECTL Authors"
+COPYRIGHT_HOLDER = "SECTL"
 APP_DESCRIPTION = (
     "一个易用的班级抽号软件，专为教育场景设计，让课堂点名更高效透明"  # 软件描述
 )
-APP_COPYRIGHT = f"Copyright © {INITIAL_AUTHORING_YEAR} {AUTHOR}. All rights reserved."  # 软件版权信息
+APP_COPYRIGHT = (
+    f"Copyright © {INITIAL_AUTHORING_YEAR} {COPYRIGHT_HOLDER}"  # 软件版权信息
+)
 APP_LICENSE = "GPL-3.0 License"  # 软件许可证
 APP_EMAIL = "lzy.12@foxmail.com"  # 软件作者邮箱
 

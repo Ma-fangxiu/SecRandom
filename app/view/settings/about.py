@@ -20,9 +20,50 @@ from app.page_building.another_window import create_contributor_window
 
 
 # ==================================================
-# 关于卡片类
+# 关于主容器类
 # ==================================================
-class about(GroupHeaderCardWidget):
+class about(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        # 创建垂直布局
+        self.vBoxLayout = QVBoxLayout(self)
+        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.vBoxLayout.setSpacing(10)
+
+        # 添加横幅组件
+        self.banner_widget = about_banner(self)
+        self.vBoxLayout.addWidget(self.banner_widget)
+
+        # 添加关于信息组件
+        self.about_info_widget = about_info(self)
+        self.vBoxLayout.addWidget(self.about_info_widget)
+
+
+# ==================================================
+# 横幅组件类
+# ==================================================
+class about_banner(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        banner_path = get_data_path("assets/icon", "secrandom-banner.png")
+        self.banner_image = ImageLabel(f"{banner_path}")
+        self.banner_image.scaledToHeight(300)
+        self.banner_image.setBorderRadius(12, 12, 12, 12)
+        self.banner_image.setScaledContents(True)
+
+        # 添加横幅图片到布局
+        self.vBoxLayout = QHBoxLayout(self)
+        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.vBoxLayout.setSpacing(0)
+
+        # 使图片居中
+        self.vBoxLayout.addWidget(self.banner_image, 0, Qt.AlignmentFlag.AlignCenter)
+
+
+# ==================================================
+# 关于信息组件类
+# ==================================================
+class about_info(GroupHeaderCardWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle(get_content_name_async("about", "title"))
@@ -58,7 +99,7 @@ class about(GroupHeaderCardWidget):
 
         # 查看当前软件版权所属
         # 根据发布年份和当前年份是否相同，决定显示格式
-        if INITIAL_AUTHORING_YEAR == CURRENT_YEAR:
+        if INITIAL_AUTHORING_YEAR <= CURRENT_YEAR:
             copyright_text = f"Copyright © {INITIAL_AUTHORING_YEAR} {COPYRIGHT_HOLDER}"
         else:
             copyright_text = f"Copyright © {INITIAL_AUTHORING_YEAR}-{CURRENT_YEAR} {COPYRIGHT_HOLDER}"
