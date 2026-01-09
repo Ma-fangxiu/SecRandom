@@ -104,7 +104,7 @@ if CSHARP_AVAILABLE:
                         self.loop.call_soon_threadsafe(task.cancel)
                 except Exception as e:
                     logger.warning(f"取消 IPC 客户端任务时出错: {e}")
-            
+
             if self.client_thread and self.client_thread.is_alive():
                 # 给一点时间让线程退出，但不阻塞太久
                 # 线程是 daemon 的，所以即使没 join 成功也会随主进程退出
@@ -244,7 +244,7 @@ if CSHARP_AVAILABLE:
                         self.is_connected = False
 
                         task = self.ipc_client.Connect()
-                        await self.loop.run_in_executor(None, lambda: task.Wait())
+                        await self.loop.run_in_executor(None, lambda task=task: task.Wait())
                         self.is_connected = True
                         self._disconnect_logged = False
 

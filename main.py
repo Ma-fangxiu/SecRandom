@@ -91,7 +91,7 @@ def main():
         # 尝试停止所有后台服务
         if 'cs_ipc_handler' in locals() and cs_ipc_handler:
             cs_ipc_handler.stop_ipc_client()
-        
+
         if 'url_handler' in locals() and url_handler:
             if hasattr(url_handler, 'url_ipc_handler'):
                 url_handler.url_ipc_handler.stop_ipc_server()
