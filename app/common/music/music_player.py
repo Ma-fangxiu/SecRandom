@@ -162,7 +162,7 @@ class MusicPlayer:
         return self._current_music
 
     def _play_music_worker(self, music_path: str, loop: bool) -> None:
-        """音乐播放工作线程
+        """音乐播放工作线程（优化版，减少延迟）
 
         Args:
             music_path: 音乐文件路径
@@ -170,42 +170,43 @@ class MusicPlayer:
         """
         stream = None
         try:
+            # 读取音乐文件（只读取一次）
+            try:
+                data, fs = sf.read(music_path)
+                if len(data.shape) > 1 and data.shape[1] > 1:
+                    data = np.mean(data, axis=1)
+                data = data.astype(np.float32)
+            except Exception as e:
+                logger.error(f"读取音乐文件失败: {e}")
+                return
+
+            # 初始化音频流（只初始化一次）
+            try:
+                stream = sd.OutputStream(
+                    samplerate=fs,
+                    channels=1,
+                    dtype="float32",
+                    blocksize=4096,  # 增加块大小以减少系统调用
+                )
+                stream.start()
+            except Exception as e:
+                logger.error(f"初始化音频流失败: {e}")
+                return
+
+            # 计算渐入步数
+            fade_in_steps = int(self._fade_in_duration * fs)
+            fade_in_step = 0
+
+            # 使用更大的块大小以提高性能
+            chunk_size = 8192  # 增加到8192
+
             while not self._stop_flag.is_set():
-                # 读取音乐文件
-                try:
-                    data, fs = sf.read(music_path)
-                    if len(data.shape) > 1 and data.shape[1] > 1:
-                        # 转换为单声道
-                        data = np.mean(data, axis=1)
-                except Exception as e:
-                    logger.error(f"读取音乐文件失败: {e}")
-                    break
-
-                # 初始化音频流
-                try:
-                    stream = sd.OutputStream(
-                        samplerate=fs,
-                        channels=1,
-                        dtype="float32",
-                        blocksize=2048,
-                    )
-                    stream.start()
-                except Exception as e:
-                    logger.error(f"初始化音频流失败: {e}")
-                    break
-
-                # 计算渐入步数
-                fade_in_steps = int(self._fade_in_duration * fs)
-                fade_in_step = 0
-
                 # 分块播放
-                chunk_size = 4096
                 for i in range(0, len(data), chunk_size):
                     if self._stop_flag.is_set():
                         break
 
-                    chunk = data[i : i + chunk_size]
-                    chunk = chunk.astype(np.float32)
+                    chunk = data[i : i + chunk_size].copy()
 
                     # 应用渐入效果
                     if fade_in_steps > 0 and fade_in_step < fade_in_steps:
@@ -216,7 +217,6 @@ class MusicPlayer:
                             chunk[remaining_steps:] *= self._volume
                         fade_in_step += remaining_steps
                     else:
-                        # 应用音量
                         chunk *= self._volume
 
                     # 写入音频流
@@ -225,15 +225,6 @@ class MusicPlayer:
                     except Exception as e:
                         logger.error(f"写入音频流失败: {e}")
                         break
-
-                # 关闭音频流
-                if stream:
-                    try:
-                        stream.stop()
-                        stream.close()
-                    except Exception as e:
-                        logger.error(f"关闭音频流失败: {e}")
-                    stream = None
 
                 # 如果不循环或者收到停止信号，退出循环
                 if not loop or self._stop_flag.is_set():
