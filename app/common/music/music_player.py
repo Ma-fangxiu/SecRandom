@@ -51,6 +51,8 @@ class MusicPlayer:
         Returns:
             bool: 是否成功开始播放
         """
+        from app.Language.obtain_language import get_content_name_async
+
         # 如果音乐文件为空或"无音乐"，则不播放
         if not music_file or music_file == get_content_name_async(
             "music_settings", "no_music"
@@ -61,8 +63,37 @@ class MusicPlayer:
         # 停止当前播放的音乐
         self.stop_music()
 
+        # 检查是否为随机播放
+        is_random_play = music_file == get_content_name_async(
+            "music_settings", "random_play"
+        )
+
         # 获取音乐文件路径
         try:
+            if is_random_play:
+                # 随机播放：从音乐文件列表中随机选择一个
+                from app.tools.path_utils import get_audio_path
+
+                audio_dir = get_audio_path("music")
+                if audio_dir.exists():
+                    supported_formats = [".mp3", ".flac", ".wav", ".ogg"]
+                    music_files = [
+                        f.name
+                        for f in audio_dir.iterdir()
+                        if f.is_file() and f.suffix.lower() in supported_formats
+                    ]
+                    if music_files:
+                        import random
+
+                        music_file = random.choice(music_files)
+                        logger.info(f"随机播放选择音乐: {music_file}")
+                    else:
+                        logger.warning("没有可用的音乐文件，无法随机播放")
+                        return False
+                else:
+                    logger.warning("音乐目录不存在，无法随机播放")
+                    return False
+
             music_path = get_audio_path(f"music/{music_file}")
             if not music_path.exists():
                 logger.error(f"音乐文件不存在: {music_path}")
@@ -162,7 +193,7 @@ class MusicPlayer:
         return self._current_music
 
     def _play_music_worker(self, music_path: str, loop: bool) -> None:
-        """音乐播放工作线程
+        """音乐播放工作线程（优化版，减少延迟）
 
         Args:
             music_path: 音乐文件路径
@@ -170,42 +201,43 @@ class MusicPlayer:
         """
         stream = None
         try:
+            # 读取音乐文件（只读取一次）
+            try:
+                data, fs = sf.read(music_path)
+                if len(data.shape) > 1 and data.shape[1] > 1:
+                    data = np.mean(data, axis=1)
+                data = data.astype(np.float32)
+            except Exception as e:
+                logger.error(f"读取音乐文件失败: {e}")
+                return
+
+            # 初始化音频流（只初始化一次）
+            try:
+                stream = sd.OutputStream(
+                    samplerate=fs,
+                    channels=1,
+                    dtype="float32",
+                    blocksize=4096,  # 增加块大小以减少系统调用
+                )
+                stream.start()
+            except Exception as e:
+                logger.error(f"初始化音频流失败: {e}")
+                return
+
+            # 计算渐入步数
+            fade_in_steps = int(self._fade_in_duration * fs)
+            fade_in_step = 0
+
+            # 使用更大的块大小以提高性能
+            chunk_size = 8192  # 增加到8192
+
             while not self._stop_flag.is_set():
-                # 读取音乐文件
-                try:
-                    data, fs = sf.read(music_path)
-                    if len(data.shape) > 1 and data.shape[1] > 1:
-                        # 转换为单声道
-                        data = np.mean(data, axis=1)
-                except Exception as e:
-                    logger.error(f"读取音乐文件失败: {e}")
-                    break
-
-                # 初始化音频流
-                try:
-                    stream = sd.OutputStream(
-                        samplerate=fs,
-                        channels=1,
-                        dtype="float32",
-                        blocksize=2048,
-                    )
-                    stream.start()
-                except Exception as e:
-                    logger.error(f"初始化音频流失败: {e}")
-                    break
-
-                # 计算渐入步数
-                fade_in_steps = int(self._fade_in_duration * fs)
-                fade_in_step = 0
-
                 # 分块播放
-                chunk_size = 4096
                 for i in range(0, len(data), chunk_size):
                     if self._stop_flag.is_set():
                         break
 
-                    chunk = data[i : i + chunk_size]
-                    chunk = chunk.astype(np.float32)
+                    chunk = data[i : i + chunk_size].copy()
 
                     # 应用渐入效果
                     if fade_in_steps > 0 and fade_in_step < fade_in_steps:
@@ -216,7 +248,6 @@ class MusicPlayer:
                             chunk[remaining_steps:] *= self._volume
                         fade_in_step += remaining_steps
                     else:
-                        # 应用音量
                         chunk *= self._volume
 
                     # 写入音频流
@@ -225,15 +256,6 @@ class MusicPlayer:
                     except Exception as e:
                         logger.error(f"写入音频流失败: {e}")
                         break
-
-                # 关闭音频流
-                if stream:
-                    try:
-                        stream.stop()
-                        stream.close()
-                    except Exception as e:
-                        logger.error(f"关闭音频流失败: {e}")
-                    stream = None
 
                 # 如果不循环或者收到停止信号，退出循环
                 if not loop or self._stop_flag.is_set():
@@ -287,7 +309,7 @@ def get_music_files():
     """获取音乐文件列表
 
     Returns:
-        List[str]: 音乐文件名列表，包含"无音乐"选项
+        List[str]: 音乐文件名列表，包含"无音乐"和"随机播放"选项
     """
     from app.tools.path_utils import get_audio_path
     from app.Language.obtain_language import get_content_name_async
@@ -303,6 +325,10 @@ def get_music_files():
     music_files = [
         get_content_name_async("music_settings", "no_music")
     ]  # 无音乐选项，表示不使用音乐
+    music_files.append(
+        get_content_name_async("music_settings", "random_play")
+    )  # 随机播放选项，表示随机选择音乐文件播放
+
     if audio_dir.exists():
         # 支持的音频格式
         supported_formats = [".mp3", ".flac", ".wav", ".ogg"]

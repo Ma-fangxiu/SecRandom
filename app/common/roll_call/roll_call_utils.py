@@ -12,9 +12,12 @@ from app.tools.config import (
     calculate_remaining_count,
     read_drawn_record,
     reset_drawn_record,
+    record_drawn_student,
 )
 from app.tools.path_utils import get_data_path, open_file
 from app.tools.settings_access import readme_settings_async, get_safe_font_size
+from app.common.display.result_display import ResultDisplayUtils
+from app.common.history.history import save_roll_call_history
 
 from app.Language.obtain_language import get_any_position_value
 
@@ -64,6 +67,7 @@ class RollCallUtils:
         range_combobox_text,
         gender_combobox_text,
         half_repeat_setting,
+        display_mode=None,
     ):
         """
         更新多数量显示标签的文本
@@ -74,6 +78,7 @@ class RollCallUtils:
             range_combobox_text: 范围下拉框当前文本
             gender_combobox_text: 性别下拉框当前文本
             half_repeat_setting: 半重复设置值
+            display_mode: 显示模式 (0: 总+剩余, 1: 总数, 2: 剩余数, 3: 不显示)
 
         Returns:
             tuple: (总人数, 剩余人数, 格式化文本)
@@ -95,19 +100,50 @@ class RollCallUtils:
         if remaining_count == 0:
             remaining_count = total_count
 
-        # 根据是否为小组模式选择不同的文本模板
-        if range_combobox_index == 1:  # 小组模式
-            text_template = get_any_position_value(
-                "roll_call", "many_count_label", "text_3"
-            )
-        else:  # 学生模式
-            text_template = get_any_position_value(
-                "roll_call", "many_count_label", "text_0"
+        # 如果未指定显示模式，从设置中获取
+        if display_mode is None:
+            display_mode = readme_settings_async(
+                "page_management", "roll_call_quantity_label"
             )
 
-        formatted_text = text_template.format(
-            total_count=total_count, remaining_count=remaining_count
-        )
+        # 根据显示模式和是否为小组模式选择不同的文本模板
+        if range_combobox_index == 1:  # 小组模式
+            if display_mode == 0:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_3"
+                )
+            elif display_mode == 1:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_4"
+                )
+            elif display_mode == 2:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_5"
+                )
+            else:  # display_mode == 3, 不显示
+                text_template = ""
+        else:  # 学生模式
+            if display_mode == 0:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_0"
+                )
+            elif display_mode == 1:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_1"
+                )
+            elif display_mode == 2:
+                text_template = get_any_position_value(
+                    "roll_call", "many_count_label", "text_2"
+                )
+            else:  # display_mode == 3, 不显示
+                text_template = ""
+
+        if text_template:
+            formatted_text = text_template.format(
+                total_count=total_count, remaining_count=remaining_count
+            )
+        else:
+            formatted_text = ""
 
         return total_count, remaining_count, formatted_text
 
@@ -411,6 +447,10 @@ class RollCallUtils:
             "vertical_offset": readme_settings_async(
                 "roll_call_notification_settings", "floating_window_vertical_offset"
             ),
+            # 通知设置
+            "notification_display_duration": readme_settings_async(
+                "roll_call_notification_settings", "notification_display_duration"
+            ),
         }
 
         return settings
@@ -441,3 +481,263 @@ class RollCallUtils:
             button.setEnabled(False)
         else:
             button.setEnabled(True)
+
+    @staticmethod
+    def create_display_settings(
+        settings_group="roll_call_settings", display_settings=None
+    ):
+        """
+        创建显示设置字典
+
+        Args:
+            settings_group: 设置组名称
+            display_settings: 自定义显示设置字典，如果提供则合并到默认设置中
+
+        Returns:
+            dict: 显示设置字典
+        """
+        if display_settings:
+            font_size = display_settings.get(
+                "font_size", get_safe_font_size(settings_group, "font_size")
+            )
+            animation_color = display_settings.get(
+                "animation_color_theme",
+                readme_settings_async(settings_group, "animation_color_theme"),
+            )
+            display_format = display_settings.get(
+                "display_format",
+                readme_settings_async(settings_group, "display_format"),
+            )
+            show_student_image = display_settings.get(
+                "student_image",
+                readme_settings_async(settings_group, "student_image"),
+            )
+            show_random = display_settings.get(
+                "show_random",
+                readme_settings_async(settings_group, "show_random"),
+            )
+        else:
+            font_size = get_safe_font_size(settings_group, "font_size")
+            animation_color = readme_settings_async(
+                settings_group, "animation_color_theme"
+            )
+            display_format = readme_settings_async(settings_group, "display_format")
+            show_student_image = readme_settings_async(settings_group, "student_image")
+            show_random = readme_settings_async(settings_group, "show_random")
+
+        return {
+            "font_size": font_size,
+            "animation_color_theme": animation_color,
+            "display_format": display_format,
+            "student_image": show_student_image,
+            "show_random": show_random,
+        }
+
+    @staticmethod
+    def display_result(
+        result_grid,
+        class_name,
+        selected_students,
+        draw_count,
+        group_index,
+        settings_group="roll_call_settings",
+        display_settings=None,
+    ):
+        """
+        显示抽取结果
+
+        Args:
+            result_grid: 结果网格布局
+            class_name: 班级名称
+            selected_students: 选中的学生列表
+            draw_count: 抽取人数
+            group_index: 小组索引
+            settings_group: 设置组名称
+            display_settings: 自定义显示设置字典
+        """
+        display_dict = RollCallUtils.create_display_settings(
+            settings_group, display_settings
+        )
+
+        student_labels = ResultDisplayUtils.create_student_label(
+            class_name=class_name,
+            selected_students=selected_students,
+            draw_count=draw_count,
+            font_size=display_dict["font_size"],
+            animation_color=display_dict["animation_color_theme"],
+            display_format=display_dict["display_format"],
+            show_student_image=display_dict["student_image"],
+            group_index=group_index,
+            show_random=display_dict["show_random"],
+            settings_group=settings_group,
+        )
+        ResultDisplayUtils.display_results_in_grid(result_grid, student_labels)
+
+    @staticmethod
+    def record_drawn_students(
+        class_name,
+        selected_students,
+        selected_students_dict,
+        gender_filter,
+        group_filter,
+        half_repeat,
+    ):
+        """
+        记录已抽取的学生
+
+        Args:
+            class_name: 班级名称
+            selected_students: 选中的学生列表
+            selected_students_dict: 选中的学生字典列表
+            gender_filter: 性别过滤器
+            group_filter: 小组过滤器
+            half_repeat: 半重复设置
+        """
+        if half_repeat > 0:
+            record_drawn_student(
+                class_name=class_name,
+                gender=gender_filter,
+                group=group_filter,
+                student_name=selected_students,
+            )
+
+        if selected_students_dict:
+            save_roll_call_history(
+                class_name=class_name,
+                selected_students=selected_students_dict,
+                group_filter=group_filter,
+                gender_filter=gender_filter,
+            )
+
+    @staticmethod
+    def prepare_notification_settings_by_group(
+        settings_group="roll_call_notification_settings",
+        display_settings=None,
+    ):
+        """
+        根据设置组准备通知设置参数
+
+        Args:
+            settings_group: 设置组名称
+            display_settings: 显示设置字典
+
+        Returns:
+            dict: 通知设置参数
+        """
+        if display_settings:
+            font_size = display_settings.get("font_size")
+            animation_color_theme = display_settings.get("animation_color_theme")
+            display_format = display_settings.get("display_format")
+            student_image = display_settings.get("student_image")
+            show_random = display_settings.get("show_random")
+        else:
+            font_size = get_safe_font_size(
+                settings_group.replace("_notification_settings", "_settings"),
+                "font_size",
+            )
+            animation_color_theme = readme_settings_async(
+                settings_group.replace("_notification_settings", "_settings"),
+                "animation_color_theme",
+            )
+            display_format = readme_settings_async(
+                settings_group.replace("_notification_settings", "_settings"),
+                "display_format",
+            )
+            student_image = readme_settings_async(
+                settings_group.replace("_notification_settings", "_settings"),
+                "student_image",
+            )
+            show_random = readme_settings_async(
+                settings_group.replace("_notification_settings", "_settings"),
+                "show_random",
+            )
+
+        settings = {
+            "font_size": font_size,
+            "animation_color_theme": animation_color_theme,
+            "display_format": display_format,
+            "student_image": student_image,
+            "show_random": show_random,
+            "animation": readme_settings_async(settings_group, "animation"),
+            "transparency": readme_settings_async(
+                settings_group, "floating_window_transparency"
+            ),
+            "auto_close_time": readme_settings_async(
+                settings_group, "floating_window_auto_close_time"
+            ),
+            "enabled_monitor": readme_settings_async(
+                settings_group, "floating_window_enabled_monitor"
+            ),
+            "window_position": readme_settings_async(
+                settings_group, "floating_window_position"
+            ),
+            "horizontal_offset": readme_settings_async(
+                settings_group, "floating_window_horizontal_offset"
+            ),
+            "vertical_offset": readme_settings_async(
+                settings_group, "floating_window_vertical_offset"
+            ),
+            "notification_display_duration": readme_settings_async(
+                settings_group, "notification_display_duration"
+            ),
+        }
+
+        return settings
+
+    @staticmethod
+    def show_notification_if_enabled(
+        class_name,
+        selected_students,
+        draw_count,
+        settings_group="roll_call_notification_settings",
+        display_settings=None,
+        is_animating=False,
+    ):
+        """
+        如果启用了通知服务，则显示抽取结果通知
+
+        Args:
+            class_name: 班级名称
+            selected_students: 选中的学生列表
+            draw_count: 抽取人数
+            settings_group: 设置组名称
+            display_settings: 显示设置字典
+            is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
+        """
+        call_notification_service = readme_settings_async(
+            settings_group, "call_notification_service"
+        )
+
+        if not call_notification_service:
+            return
+
+        settings = RollCallUtils.prepare_notification_settings_by_group(
+            settings_group, display_settings
+        )
+
+        use_main_window_when_exceed_threshold = readme_settings_async(
+            settings_group, "use_main_window_when_exceed_threshold"
+        )
+        max_notify_count = readme_settings_async(
+            settings_group, "main_window_display_threshold"
+        )
+
+        if use_main_window_when_exceed_threshold:
+            if draw_count <= max_notify_count:
+                ResultDisplayUtils.show_notification_if_enabled(
+                    class_name,
+                    selected_students,
+                    draw_count,
+                    settings,
+                    settings_group=settings_group,
+                    is_animating=is_animating,
+                )
+        else:
+            ResultDisplayUtils.show_notification_if_enabled(
+                class_name,
+                selected_students,
+                draw_count,
+                settings,
+                settings_group=settings_group,
+                is_animating=is_animating,
+            )

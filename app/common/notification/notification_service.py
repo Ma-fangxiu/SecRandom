@@ -158,9 +158,6 @@ class FloatingNotificationWindow(CardWidget):
         # 关闭动画
         self.hide_animation = None
 
-        # 缓存的标签，用于复用
-        self.cached_student_labels = []
-
         # 启动周期性置顶
         self._start_periodic_topmost()
 
@@ -321,8 +318,14 @@ class FloatingNotificationWindow(CardWidget):
                 }}
             """)
 
-    def apply_settings(self, settings=None, settings_group=None):
-        """应用设置到通知窗口"""
+    def apply_settings(self, settings=None, settings_group=None, is_animating=False):
+        """应用设置到通知窗口
+
+        Args:
+            settings: 设置字典
+            settings_group: 设置组名称
+            is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
+        """
         if settings:
             # 使用传递的设置
             transparency = settings.get("transparency", 0.6)
@@ -354,8 +357,8 @@ class FloatingNotificationWindow(CardWidget):
         # 根据设置定位窗口
         self.position_window(settings)
 
-        # 设置自动关闭时间
-        if auto_close_time > 0:
+        # 设置自动关闭时间（仅在非动画状态下启动）
+        if auto_close_time > 0 and not is_animating:
             self.auto_close_timer.stop()
             self.auto_close_timer.setInterval(auto_close_time * 1000)  # 转换为毫秒
             # 初始化倒计时并启动更新定时器
@@ -786,7 +789,7 @@ class FloatingNotificationWindow(CardWidget):
         font_settings_group=None,
         settings_group=None,
     ):
-        """更新通知窗口的内容（优化版，复用控件避免闪烁）
+        """更新通知窗口的内容
 
         Args:
             student_labels: 包含学生信息的BodyLabel控件列表
@@ -809,65 +812,64 @@ class FloatingNotificationWindow(CardWidget):
         if not student_labels:
             return
 
-        min_count = min(len(student_labels), len(self.cached_student_labels))
-
-        for i in range(min_count):
-            old_widget = self.cached_student_labels[i]
-            new_widget = student_labels[i]
-
-            if old_widget and new_widget:
-                old_layout = old_widget.layout()
-                new_layout = new_widget.layout()
-
-                if old_layout and new_layout:
-                    for j in range(min(old_layout.count(), new_layout.count())):
-                        old_item = old_layout.itemAt(j)
-                        new_item = new_layout.itemAt(j)
-
-                        if old_item and new_item:
-                            old_label = old_item.widget()
-                            new_label = new_item.widget()
-
-                            if old_label and new_label:
-                                old_label.setText(new_label.text())
-                                old_label.setStyleSheet(new_label.styleSheet())
-
-        for i in range(min_count, len(student_labels)):
-            label = student_labels[i]
-            # 如果有字体设置，则应用到标签上
+        # 预计算窗口大小
+        total_height = 0
+        max_width = 0
+        for label in student_labels:
+            # 应用字体设置
             if font_settings_group:
-                # 检查是否使用全局字体
                 use_global_font = readme_settings_async(
                     font_settings_group, "use_global_font"
                 )
                 custom_font = None
-                if use_global_font == 1:  # 不使用全局字体，使用自定义字体
+                if use_global_font == 1:
                     custom_font = readme_settings_async(
                         font_settings_group, "custom_font"
                     )
                     if custom_font and hasattr(label, "setStyleSheet"):
-                        # 获取当前样式表并添加字体设置
                         current_style = label.styleSheet()
                         label.setStyleSheet(
                             f"font-family: '{custom_font}'; {current_style}"
                         )
+            # 计算标签大小
+            label.adjustSize()
+            size_hint = label.sizeHint()
+            total_height += size_hint.height()
+            max_width = max(max_width, size_hint.width())
+
+        # 加上布局间距和边距
+        spacing = self.content_layout.spacing()
+        margins = self.content_layout.contentsMargins()
+        total_height += spacing * (len(student_labels) - 1)
+        total_height += margins.top() + margins.bottom()
+        max_width += margins.left() + margins.right()
+
+        # 加上倒计时标签的高度
+        if self.countdown_label:
+            countdown_height = self.countdown_label.sizeHint().height()
+            total_height += countdown_height + spacing
+
+        # 清除所有旧控件
+        while self.content_layout.count():
+            item = self.content_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # 添加新控件
+        for label in student_labels:
             self.content_layout.addWidget(label)
 
-        for i in range(min_count, len(self.cached_student_labels)):
-            widget = self.cached_student_labels[i]
-            self.content_layout.removeWidget(widget)
-            widget.deleteLater()
-
-        self.cached_student_labels = student_labels
+        # 设置窗口大小
+        window_width = max(300, max_width + 30)
+        window_height = min(600, total_height + 30)
+        self.setFixedSize(window_width, window_height)
 
         # 确保颜色与当前主题同步
         try:
             self._on_theme_changed()
         except Exception as e:
             logger.exception("更新内容时同步主题时出错（已忽略）: {}", e)
-
-        # 调整窗口大小以适应内容
-        self.adjustSize()
 
         # 检查窗口是否已经显示
         if self.isVisible():
@@ -917,81 +919,6 @@ class FloatingNotificationManager:
             self.ipc_handler = URLIPCHandler("SecRandom", "secrandom")
             self._initialized = True
 
-    def send_to_classisland2(
-        self,
-        class_name,
-        selected_students,
-        draw_count=1,
-        settings=None,
-        settings_group=None,
-    ):
-        """发送通知到ClassIsland（旧版）
-
-        Args:
-            class_name: 班级名称
-            selected_students: 选中的学生列表 [(学号, 姓名, 是否存在), ...]
-            draw_count: 抽取的学生数量
-            settings: 通知设置参数
-            settings_group: 设置组名称
-        """
-        try:
-            # 构建通知数据
-            notification_data = {
-                "type": "notification",
-                "subtype": "roll_call",
-                "class_name": class_name,
-                "selected_students": [
-                    {
-                        "student_id": student[0],
-                        "student_name": student[1],
-                        "exists": student[2],
-                    }
-                    for student in selected_students
-                ],
-                "draw_count": draw_count,
-            }
-
-            # 如果提供了设置，添加显示时长
-            if settings:
-                display_duration = settings.get("notification_display_duration", 5)
-                notification_data["display_duration"] = display_duration
-
-            # 创建ClassIsland IPC处理器来发送消息
-            classisland_ipc = URLIPCHandler("ClassIsland", "classisland")
-
-            # 尝试从配置中加载ClassIsland的端口
-            port = classisland_ipc.load_port_config()
-
-            if port is None:
-                logger.warning("无法获取ClassIsland的IPC端口，可能ClassIsland未运行")
-                # 如果无法获取端口，回退到SecRandom通知服务
-                logger.info("回退到SecRandom通知服务")
-                self._show_secrandom_notification(
-                    class_name, selected_students, draw_count, settings, settings_group
-                )
-                return
-
-            # 发送IPC消息到ClassIsland
-            response = classisland_ipc.send_ipc_message(port, notification_data)
-
-            if response:
-                logger.info("成功发送通知到ClassIsland: {}", response)
-            else:
-                logger.warning("发送通知到ClassIsland失败")
-                # 如果发送失败，回退到SecRandom通知服务
-                logger.info("回退到SecRandom通知服务")
-                self._show_secrandom_notification(
-                    class_name, selected_students, draw_count, settings, settings_group
-                )
-
-        except Exception as e:
-            logger.exception("发送通知到ClassIsland时出错: {}", e)
-            # 如果发生异常，回退到SecRandom通知服务
-            logger.info("因错误回退到SecRandom通知服务")
-            self._show_secrandom_notification(
-                class_name, selected_students, draw_count, settings, settings_group
-            )
-
     def send_to_classisland(
         self,
         class_name,
@@ -1000,6 +927,7 @@ class FloatingNotificationManager:
         settings=None,
         settings_group=None,
         fallback_on_error=True,
+        is_animating=False,
     ):
         """发送通知到ClassIsland
 
@@ -1010,6 +938,7 @@ class FloatingNotificationManager:
             settings: 通知设置参数
             settings_group: 设置组名称
             fallback_on_error: 是否在错误时回退到内置通知
+            is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
         """
 
         try:
@@ -1028,6 +957,7 @@ class FloatingNotificationManager:
                         draw_count,
                         settings,
                         settings_group,
+                        is_animating,
                     )
                 else:
                     logger.warning("发送通知到ClassIsland失败")
@@ -1037,7 +967,12 @@ class FloatingNotificationManager:
             if fallback_on_error:
                 logger.info("因错误回退到SecRandom通知服务")
                 self._show_secrandom_notification(
-                    class_name, selected_students, draw_count, settings, settings_group
+                    class_name,
+                    selected_students,
+                    draw_count,
+                    settings,
+                    settings_group,
+                    is_animating,
                 )
             else:
                 logger.warning("发送通知到ClassIsland时出错，但不回退")
@@ -1049,8 +984,18 @@ class FloatingNotificationManager:
         draw_count=1,
         settings=None,
         settings_group=None,
+        is_animating=False,
     ):
-        """显示SecRandom内置通知（用于回退）"""
+        """显示SecRandom内置通知（用于回退）
+
+        Args:
+            class_name: 班级名称
+            selected_students: 选中的学生列表 [(学号, 姓名, 是否存在), ...]
+            draw_count: 抽取的学生数量
+            settings: 通知设置参数
+            settings_group: 设置组名称
+            is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
+        """
         # 重新调用SecRandom通知服务，使用原始的show_roll_call_result逻辑
         if settings:
             font_size = settings.get("font_size", 50)
@@ -1109,10 +1054,14 @@ class FloatingNotificationManager:
         if settings:
             display_duration = settings.get("notification_display_duration", 5)
             window.apply_settings(
-                {**settings, "auto_close_time": display_duration}, settings_group
+                {**settings, "auto_close_time": display_duration},
+                settings_group,
+                is_animating,
             )
         else:
-            window.apply_settings({"auto_close_time": 5}, settings_group)  # 默认5秒
+            window.apply_settings(
+                {"auto_close_time": 5}, settings_group, is_animating
+            )  # 默认5秒
 
         window.update_content(
             student_labels, settings, font_settings_group, settings_group
@@ -1138,6 +1087,7 @@ class FloatingNotificationManager:
         draw_count=1,
         settings=None,
         settings_group=None,
+        is_animating=False,
     ):
         """在浮动通知窗口中显示点名结果
 
@@ -1147,6 +1097,7 @@ class FloatingNotificationManager:
             draw_count: 抽取的学生数量
             settings: 通知设置参数
             settings_group: 设置组名称，默认为notification_settings
+            is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
         """
         # 获取通知服务类型设置
         notification_service_type = 0  # 默认为SecRandom通知服务
@@ -1162,7 +1113,12 @@ class FloatingNotificationManager:
         # 如果选择了ClassIsland通知服务，则发送到ClassIsland
         if notification_service_type == 1:  # 1 表示 ClassIsland 通知服务
             self.send_to_classisland(
-                class_name, selected_students, draw_count, settings, settings_group
+                class_name,
+                selected_students,
+                draw_count,
+                settings,
+                settings_group,
+                is_animating=is_animating,
             )
             return
 
@@ -1176,6 +1132,7 @@ class FloatingNotificationManager:
                 settings,
                 settings_group,
                 fallback_on_error=False,
+                is_animating=is_animating,
             )
             # 继续执行下面的内置通知逻辑，不return
 
@@ -1238,10 +1195,14 @@ class FloatingNotificationManager:
         if settings:
             display_duration = settings.get("notification_display_duration", 5)
             window.apply_settings(
-                {**settings, "auto_close_time": display_duration}, settings_group
+                {**settings, "auto_close_time": display_duration},
+                settings_group,
+                is_animating,
             )
         else:
-            window.apply_settings({"auto_close_time": 5}, settings_group)  # 默认5秒
+            window.apply_settings(
+                {"auto_close_time": 5}, settings_group, is_animating
+            )  # 默认5秒
 
         window.update_content(
             student_labels, settings, font_settings_group, settings_group
@@ -1258,7 +1219,12 @@ class FloatingNotificationManager:
 
 
 def show_roll_call_notification(
-    class_name, selected_students, draw_count=1, settings=None, settings_group=None
+    class_name,
+    selected_students,
+    draw_count=1,
+    settings=None,
+    settings_group=None,
+    is_animating=False,
 ):
     """显示点名通知的便捷函数
 
@@ -1267,8 +1233,15 @@ def show_roll_call_notification(
         selected_students: 选中的学生列表 [(学号, 姓名, 是否存在), ...]
         draw_count: 抽取的学生数量
         settings: 通知设置参数
+        settings_group: 设置组名称
+        is_animating: 是否在动画过程中，如果是则不启动自动关闭定时器
     """
     manager = FloatingNotificationManager()
     manager.show_roll_call_result(
-        class_name, selected_students, draw_count, settings, settings_group
+        class_name,
+        selected_students,
+        draw_count,
+        settings,
+        settings_group,
+        is_animating,
     )
