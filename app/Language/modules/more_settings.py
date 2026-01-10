@@ -199,7 +199,7 @@ shortcut_settings = {
         "enable_shortcut": {
             "name": "启用快捷键",
             "description": "启用后可使用快捷键快速操作",
-            "switchbutton_name": {"enable": "启用", "disable": "禁用"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "open_roll_call_page": {"name": "打开点名页面"},
         "use_quick_draw": {"name": "使用闪抽"},

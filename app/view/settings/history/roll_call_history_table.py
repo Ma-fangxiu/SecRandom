@@ -1041,26 +1041,22 @@ class roll_call_history_table(GroupHeaderCardWidget):
         # 对于模式0和1，需要隐藏性别和小组列
         if self.current_mode in [0, 1]:
             # 原始表头结构: [学号, 姓名, 性别, 小组, 点名次数/时间, 权重]
-            # 如果没有性别，移除性别列（索引2）
-            if not has_gender and len(headers) > 2:
+            # 根据has_gender和has_group动态调整表头
+            if not has_gender and not has_group:
+                headers = headers[:2] + headers[4:]
+            elif not has_gender:
                 headers = headers[:2] + headers[3:]
-            # 如果没有小组，移除小组列（在移除性别后的索引3，否则是索引3）
-            if not has_group:
-                if not has_gender and len(headers) > 3:
-                    headers = headers[:3] + headers[4:]
-                elif has_gender and len(headers) > 3:
-                    headers = headers[:3] + headers[4:]
+            elif not has_group:
+                headers = headers[:3] + headers[4:]
         elif self.current_mode == 2:
             # 原始表头结构: [点名时间, 点名模式, 点名人数, 性别限制, 小组限制, 权重]
-            # 如果没有性别，移除性别限制列（索引3）
-            if not has_gender and len(headers) > 3:
+            # 根据has_gender和has_group动态调整表头
+            if not has_gender and not has_group:
+                headers = headers[:3] + headers[5:]
+            elif not has_gender:
                 headers = headers[:3] + headers[4:]
-            # 如果没有小组，移除小组限制列（在移除性别后的索引4，否则是索引4）
-            if not has_group:
-                if not has_gender and len(headers) > 4:
-                    headers = headers[:4] + headers[5:]
-                elif has_gender and len(headers) > 4:
-                    headers = headers[:4] + headers[5:]
+            elif not has_group:
+                headers = headers[:4] + headers[5:]
 
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
