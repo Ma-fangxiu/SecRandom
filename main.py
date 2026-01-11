@@ -38,31 +38,26 @@ def main():
     logger.remove()
     configure_logging()
 
-    def before_send(event, hint):
-        # 如果事件中不包含异常信息（即没有堆栈），则不上传
-        if "exception" not in event:
-            return None
-        return event
+    if VERSION != "v0.0.0":
 
-    # 设置 Sentry 环境和版本
-    # 开发环境：包含 "0.0.0" 的版本号
-    # 生产环境：不包含 "0.0.0" 的版本号
-    environment = "development" if "0.0.0" in VERSION else "production"
+        def before_send(event, hint):
+            # 如果事件中不包含异常信息（即没有堆栈），则不上传
+            if "exception" not in event:
+                return None
+            return event
 
-    sentry_sdk.init(
-        dsn="https://f48074b49e319f7b952583c283046259@o4510289605296128.ingest.de.sentry.io/4510681366659152",
-        environment=environment,
-        release=VERSION,
-        integrations=[
-            LoguruIntegration(
-                level=LoggingLevels.INFO.value,
-                event_level=LoggingLevels.ERROR.value,
-            ),
-        ],
-        before_send=before_send,
-        send_default_pii=True,
-        enable_logs=True,
-    )
+        sentry_sdk.init(
+            dsn="https://f48074b49e319f7b952583c283046259@o4510289605296128.ingest.de.sentry.io/4510681366659152",
+            integrations=[
+                LoguruIntegration(
+                    level=LoggingLevels.INFO.value,
+                    event_level=LoggingLevels.ERROR.value,
+                ),
+            ],
+            before_send=before_send,
+            send_default_pii=True,
+            enable_logs=True,
+        )
 
     wm.app_start_time = time.perf_counter()
 

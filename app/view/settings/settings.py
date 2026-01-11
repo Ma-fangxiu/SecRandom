@@ -343,6 +343,9 @@ class SettingsWindow(FluentWindow):
             "security_settings": readme_settings_async(
                 "sidebar_management_settings", "security_settings"
             ),
+            "linkage_settings": readme_settings_async(
+                "sidebar_management_settings", "linkage_settings"
+            ),
             "voice_settings": readme_settings_async(
                 "sidebar_management_settings", "voice_settings"
             ),
@@ -386,6 +389,12 @@ class SettingsWindow(FluentWindow):
                 "safetySettingsInterface",
                 "safety_settings_page",
                 True,
+            ),
+            (
+                "linkage_settings",
+                "courseSettingsInterface",
+                "linkage_settings_page",
+                False,
             ),
             (
                 "voice_settings",
@@ -701,6 +710,7 @@ class SettingsWindow(FluentWindow):
                 "voiceSettingsInterface",
                 "historyInterface",
                 "moreSettingsInterface",
+                "courseSettingsInterface",
                 "updateInterface",
                 "aboutInterface",
             ]
@@ -734,7 +744,9 @@ class SettingsWindow(FluentWindow):
                 layout.addWidget(real_page)
                 logger.debug(f"后台预热创建设置页面: {name}")
             except RuntimeError as e:
-                logger.exception(f"将延迟页面 {name} 插入容器失败（容器可能已销毁）: {e}")
+                logger.exception(
+                    f"将延迟页面 {name} 插入容器失败（容器可能已销毁）: {e}"
+                )
                 return
         except Exception as e:
             logger.exception(f"_create_deferred_page 失败: {e}")
@@ -761,6 +773,9 @@ class SettingsWindow(FluentWindow):
             ),
             "security_settings": readme_settings_async(
                 "sidebar_management_settings", "security_settings"
+            ),
+            "linkage_settings": readme_settings_async(
+                "sidebar_management_settings", "linkage_settings"
             ),
             "voice_settings": readme_settings_async(
                 "sidebar_management_settings", "voice_settings"
@@ -821,6 +836,14 @@ class SettingsWindow(FluentWindow):
                 "safety_settings_item",
                 "ic_fluent_shield_20_filled",
                 "safety_settings",
+                "title",
+            ),
+            (
+                "linkage_settings",
+                "courseSettingsInterface",
+                "course_settings_item",
+                "ic_fluent_calendar_ltr_20_filled",
+                "linkage_settings",
                 "title",
             ),
             (

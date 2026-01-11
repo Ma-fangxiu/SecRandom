@@ -292,11 +292,6 @@ sidebar_management_settings = {
             "description": "设置安全设置项在侧边栏位置 (重启生效)",
             "combo_items": ["顶部", "底部", "不显示"],
         },
-        "personal_settings": {
-            "name": "个性设置位置",
-            "description": "设置个性设置项在侧边栏位置 (重启生效)",
-            "combo_items": ["顶部", "底部"],
-        },
         "voice_settings": {
             "name": "语音设置位置",
             "description": "设置语音设置项在侧边栏位置 (重启生效)",
@@ -310,6 +305,11 @@ sidebar_management_settings = {
         "more_settings": {
             "name": "更多设置位置",
             "description": "设置更多设置项在侧边栏位置 (重启生效)",
+            "combo_items": ["顶部", "底部", "不显示"],
+        },
+        "linkage_settings": {
+            "name": "课程设置位置",
+            "description": "设置课程设置项在侧边栏位置 (重启生效)",
             "combo_items": ["顶部", "底部", "不显示"],
         },
     },
@@ -353,11 +353,6 @@ sidebar_management_settings = {
             "combo_items": {"0": "Top", "1": "Bottom", "2": "Hide"},
             "name": "Position of Security settings",
         },
-        "personal_settings": {
-            "description": "Set the position of Custom settings in sidebar (Restart to take effect)",
-            "combo_items": {"0": "Top", "1": "Bottom"},
-            "name": "Position of Profile settings",
-        },
         "voice_settings": {
             "description": "Set the position of Voice settings in sidebar (Restart to take effect)",
             "combo_items": {"0": "Top", "1": "Bottom", "2": "Hide"},
@@ -372,6 +367,11 @@ sidebar_management_settings = {
             "description": "Set the position of More settings in sidebar (Restart to take effect)",
             "combo_items": {"0": "Top", "1": "Bottom", "2": "Hide"},
             "name": "Position of More settings",
+        },
+        "linkage_settings": {
+            "description": "Set the position of Course settings in sidebar (Restart to take effect)",
+            "combo_items": {"0": "Top", "1": "Bottom", "2": "Hide"},
+            "name": "Position of Course settings",
         },
     },
 }

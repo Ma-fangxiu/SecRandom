@@ -125,7 +125,9 @@ class music_management(GroupHeaderCardWidget):
 
                         shutil.copy2(src_file, dst_file)
                     except Exception as e:
-                        logger.exception(f"导入音乐文件失败: {src_file.name}, 错误: {e}")
+                        logger.exception(
+                            f"导入音乐文件失败: {src_file.name}, 错误: {e}"
+                        )
 
             # 刷新音乐文件列表
             self.refresh_music_files()

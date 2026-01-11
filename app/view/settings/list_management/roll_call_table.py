@@ -303,7 +303,9 @@ class roll_call_table(GroupHeaderCardWidget):
                 break
 
         if not matched_key:
-            logger.exception(f"未找到学号为 {student_id} 的学生，学生姓名: {student_name}")
+            logger.exception(
+                f"未找到学号为 {student_id} 的学生，学生姓名: {student_name}"
+            )
             return
 
         # 根据列索引更新相应的字段

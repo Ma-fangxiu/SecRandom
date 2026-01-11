@@ -436,7 +436,9 @@ class MainWindow(FluentWindow):
                         "_handle_quick_draw: 创建contentWidget后获取contentWidget成功"
                     )
                 else:
-                    logger.exception("_handle_quick_draw: 无法创建或获取roll_call_widget")
+                    logger.exception(
+                        "_handle_quick_draw: 无法创建或获取roll_call_widget"
+                    )
                     return
 
         logger.debug("_handle_quick_draw: 成功获取roll_call_widget")
@@ -874,11 +876,11 @@ class MainWindow(FluentWindow):
 
             # 获取课前重置时间（秒）
             pre_class_reset_time = readme_settings_async(
-                "course_settings", "pre_class_reset_time", 120
+                "linkage_settings", "pre_class_reset_time", 120
             )
 
             # 检查数据源选择
-            data_source = readme_settings_async("course_settings", "data_source", 0)
+            data_source = readme_settings_async("linkage_settings", "data_source", 0)
 
             # 根据数据源选择不同的方式获取距离上课时间
             if data_source == 2:
@@ -965,13 +967,13 @@ class MainWindow(FluentWindow):
             logger.debug("初始化课前重置功能")
             # 检查是否启用了课前重置功能
             pre_class_reset_enabled = readme_settings_async(
-                "course_settings", "pre_class_reset_enabled", False
+                "linkage_settings", "pre_class_reset_enabled", False
             )
             if not pre_class_reset_enabled:
                 return
 
             # 检查数据源选择
-            data_source = readme_settings_async("course_settings", "data_source", 0)
+            data_source = readme_settings_async("linkage_settings", "data_source", 0)
 
             if data_source == 0:
                 # 不使用数据源，不启动定时器

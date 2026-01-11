@@ -261,12 +261,12 @@ class RollCallUtils:
         # 获取当前课程信息（用于科目过滤）
         current_class_info = None
         subject_history_filter_enabled = (
-            readme_settings_async("course_settings", "subject_history_filter_enabled")
+            readme_settings_async("linkage_settings", "subject_history_filter_enabled")
             or False
         )
 
         if subject_history_filter_enabled:
-            data_source = readme_settings_async("course_settings", "data_source")
+            data_source = readme_settings_async("linkage_settings", "data_source")
             if data_source == 2:
                 from app.common.IPC_URL.csharp_ipc_handler import CSharpIPCHandler
 

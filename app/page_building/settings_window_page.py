@@ -140,6 +140,20 @@ class history_page(PivotPageTemplate):
         self.set_base_path("app.view.settings.history")
 
 
+class linkage_settings_page(PivotPageTemplate):
+    """创建联动设置页面"""
+
+    def __init__(self, parent: QFrame = None, is_preview=False):
+        page_config = {
+            "linkage_settings": get_content_name_async("linkage_settings", "title"),
+            "classisland_settings": get_content_name_async(
+                "classisland_settings", "title"
+            ),
+        }
+        super().__init__(page_config, parent, is_preview_mode=is_preview)
+        self.set_base_path("app.view.settings.linkage_settings")
+
+
 class more_settings_page(PivotPageTemplate):
     """创建更多设置页面"""
 
@@ -159,9 +173,6 @@ class more_settings_page(PivotPageTemplate):
 
         if readme_settings_async("basic_settings", "simplified_mode"):
             page_config = {}
-            page_config["course_settings"] = get_content_name_async(
-                "course_settings", "title"
-            )
             page_config["shortcut_settings"] = get_content_name_async(
                 "shortcut_settings", "title"
             )
@@ -171,7 +182,6 @@ class more_settings_page(PivotPageTemplate):
                 "shortcut_settings": get_content_name_async(
                     "shortcut_settings", "title"
                 ),
-                "course_settings": get_content_name_async("course_settings", "title"),
                 "music_settings": get_content_name_async("music_settings", "title"),
                 "page_management": get_content_name_async("page_management", "title"),
                 "sidebar_tray_management": get_content_name_async(
