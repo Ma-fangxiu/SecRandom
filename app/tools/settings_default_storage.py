@@ -345,7 +345,7 @@ DEFAULT_SETTINGS = {
         "floating_window_management": {"default_value": 0},
         "notification_service": {"default_value": 1},
         "security_settings": {"default_value": 1},
-        "personal_settings": {"default_value": 1},
+        "linkage_settings": {"default_value": 1},
         "voice_settings": {"default_value": 1},
         "settings_history": {"default_value": 1},
         "more_settings": {"default_value": 1},
@@ -418,7 +418,7 @@ DEFAULT_SETTINGS = {
     "more_settings": {
         "title": {"default_value": None},
     },
-    "course_settings": {
+    "linkage_settings": {
         "title": {"default_value": None},
         "verification_required": {"default_value": True},
         "instant_draw_disable": {"default_value": False},

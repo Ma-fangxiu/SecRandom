@@ -28,7 +28,9 @@ class CurrentConfigViewerWindow(QWidget):
     def init_ui(self):
         """初始化UI"""
         # 设置窗口标题
-        self.setWindowTitle(get_content_name_async("course_settings", "template_title"))
+        self.setWindowTitle(
+            get_content_name_async("linkage_settings", "template_title")
+        )
 
         # 创建主布局
         self.main_layout = QVBoxLayout(self)
@@ -37,7 +39,7 @@ class CurrentConfigViewerWindow(QWidget):
 
         # 创建标题标签
         title_label = BodyLabel(
-            get_content_name_async("course_settings", "cses_import_settings", "name")
+            get_content_name_async("linkage_settings", "cses_import_settings", "name")
         )
 
         # 创建表格控件
@@ -56,7 +58,7 @@ class CurrentConfigViewerWindow(QWidget):
         )
         self.table_widget.verticalHeader().hide()
         self.table_widget.setHorizontalHeaderLabels(
-            get_content_name_async("course_settings", "table_headers")
+            get_content_name_async("linkage_settings", "table_headers")
         )
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -83,7 +85,7 @@ class CurrentConfigViewerWindow(QWidget):
                     0,
                     0,
                     QTableWidgetItem(
-                        get_content_name_async("course_settings", "no_cses_folder")
+                        get_content_name_async("linkage_settings", "no_cses_folder")
                     ),
                 )
                 return
@@ -98,7 +100,7 @@ class CurrentConfigViewerWindow(QWidget):
                     0,
                     0,
                     QTableWidgetItem(
-                        get_content_name_async("course_settings", "no_schedule_file")
+                        get_content_name_async("linkage_settings", "no_schedule_file")
                     ),
                 )
                 return
@@ -116,12 +118,12 @@ class CurrentConfigViewerWindow(QWidget):
                         for class_info in class_info_list:
                             # 转换星期
                             day_map = get_content_name_async(
-                                "course_settings", "day_map"
+                                "linkage_settings", "day_map"
                             )
                             day_of_week = str(class_info.get("day_of_week", 0))
                             day = day_map.get(
                                 day_of_week,
-                                get_content_name_async("course_settings", "unknown"),
+                                get_content_name_async("linkage_settings", "unknown"),
                             )
 
                             data.append(
@@ -130,7 +132,7 @@ class CurrentConfigViewerWindow(QWidget):
                                     class_info.get(
                                         "name",
                                         get_content_name_async(
-                                            "course_settings", "unknown_course"
+                                            "linkage_settings", "unknown_course"
                                         ),
                                     ),
                                     class_info.get("start_time", ""),
@@ -143,7 +145,7 @@ class CurrentConfigViewerWindow(QWidget):
                     data.append(
                         [
                             "",
-                            get_content_name_async("course_settings", "parse_failed"),
+                            get_content_name_async("linkage_settings", "parse_failed"),
                             "",
                             "",
                             "",
@@ -153,7 +155,7 @@ class CurrentConfigViewerWindow(QWidget):
             # 设置表格列数和标题
             self.table_widget.setColumnCount(5)
             self.table_widget.setHorizontalHeaderLabels(
-                get_content_name_async("course_settings", "table_headers")
+                get_content_name_async("linkage_settings", "table_headers")
             )
             self.table_widget.horizontalHeader().setSectionResizeMode(
                 QHeaderView.Stretch
@@ -195,7 +197,7 @@ class CurrentConfigViewerWindow(QWidget):
                 0,
                 QTableWidgetItem(
                     get_content_name_async(
-                        "course_settings", "load_config_failed"
+                        "linkage_settings", "load_config_failed"
                     ).format(str(e))
                 ),
             )

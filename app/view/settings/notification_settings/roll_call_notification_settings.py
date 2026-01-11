@@ -35,12 +35,6 @@ class roll_call_notification_settings(QWidget):
         self.floating_window_widget = floating_window_settings(self)
         self.vBoxLayout.addWidget(self.floating_window_widget)
 
-        # 添加通知显示时长设置组件
-        self.classisland_notification_service_widget = (
-            classisland_notification_service_settings(self)
-        )
-        self.vBoxLayout.addWidget(self.classisland_notification_service_widget)
-
 
 class basic_settings(GroupHeaderCardWidget):
     def __init__(self, parent=None):
@@ -130,22 +124,6 @@ class basic_settings(GroupHeaderCardWidget):
             )
         )
 
-        # 通知服务类型选择
-        self.notification_service_type_combo_box = ComboBox()
-        self.notification_service_type_combo_box.addItems(
-            get_content_combo_name_async(
-                "roll_call_notification_settings", "notification_service_type"
-            )
-        )
-        self.notification_service_type_combo_box.setCurrentIndex(
-            readme_settings_async(
-                "roll_call_notification_settings", "notification_service_type"
-            )
-        )
-        self.notification_service_type_combo_box.currentIndexChanged.connect(
-            self.on_notification_service_type_changed
-        )
-
         # 主窗口显示阈值
         self.main_window_threshold_spinbox = SpinBox()
         self.main_window_threshold_spinbox.setFixedWidth(WIDTH_SPINBOX)
@@ -183,16 +161,6 @@ class basic_settings(GroupHeaderCardWidget):
             self.animation_switch,
         )
         self.addGroup(
-            get_theme_icon("ic_fluent_cloud_20_filled"),
-            get_content_name_async(
-                "roll_call_notification_settings", "notification_service_type"
-            ),
-            get_content_description_async(
-                "roll_call_notification_settings", "notification_service_type"
-            ),
-            self.notification_service_type_combo_box,
-        )
-        self.addGroup(
             get_theme_icon("ic_fluent_window_20_filled"),
             get_content_name_async(
                 "roll_call_notification_settings",
@@ -214,38 +182,6 @@ class basic_settings(GroupHeaderCardWidget):
             ),
             self.main_window_threshold_spinbox,
         )
-
-    def on_notification_service_type_changed(self, index):
-        """通知服务类型变化时的处理"""
-        update_settings(
-            "roll_call_notification_settings",
-            "notification_service_type",
-            index,
-        )
-        # 如果选择了ClassIsland或内置+ClassIsland，显示提示信息
-        if index == 1 or index == 2:
-            from qfluentwidgets import InfoBar, InfoBarPosition
-
-            hint_title = get_any_position_value_async(
-                "roll_call_notification_settings",
-                "classisland_notification_hint",
-                "title",
-            )
-            hint_content = get_any_position_value_async(
-                "roll_call_notification_settings",
-                "classisland_notification_hint",
-                "content",
-            )
-
-            InfoBar.success(
-                title=hint_title,
-                content=hint_content,
-                orient=Qt.Horizontal,
-                isClosable=True,
-                position=InfoBarPosition.TOP,
-                duration=5000,
-                parent=self,
-            )
 
 
 class floating_window_settings(GroupHeaderCardWidget):
@@ -470,45 +406,3 @@ class floating_window_settings(GroupHeaderCardWidget):
                 "floating_window_enabled_monitor",
                 self.enabled_monitor_combo_box.currentText(),
             )
-
-
-class classisland_notification_service_settings(GroupHeaderCardWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setTitle(
-            get_content_name_async(
-                "roll_call_notification_settings",
-                "classisland_notification_service_settings",
-            )
-        )
-        self.setBorderRadius(8)
-
-        # 通知显示时长
-        self.notification_display_duration_spinbox = SpinBox()
-        self.notification_display_duration_spinbox.setFixedWidth(WIDTH_SPINBOX)
-        self.notification_display_duration_spinbox.setRange(1, 60)
-        self.notification_display_duration_spinbox.setSuffix("s")
-        self.notification_display_duration_spinbox.setValue(
-            readme_settings_async(
-                "roll_call_notification_settings", "notification_display_duration"
-            )
-        )
-        self.notification_display_duration_spinbox.valueChanged.connect(
-            lambda: update_settings(
-                "roll_call_notification_settings",
-                "notification_display_duration",
-                self.notification_display_duration_spinbox.value(),
-            )
-        )
-
-        # 添加设置项到分组
-        self.addGroup(
-            get_theme_icon("ic_fluent_timer_20_filled"),
-            get_content_name_async(
-                "roll_call_notification_settings", "notification_display_duration"
-            ),
-            get_content_description_async(
-                "roll_call_notification_settings", "notification_display_duration"
-            ),
-            self.notification_display_duration_spinbox,
-        )

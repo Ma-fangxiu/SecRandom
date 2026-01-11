@@ -366,21 +366,21 @@ class sidebar_management_settings(GroupHeaderCardWidget):
             )
         )
 
-        # 个性设置下拉框
-        self.personal_settings_comboBox = ComboBox(self)
-        self.personal_settings_comboBox.addItems(
+        # 课程设置下拉框
+        self.course_settings_comboBox = ComboBox(self)
+        self.course_settings_comboBox.addItems(
             get_content_combo_name_async(
-                "sidebar_management_settings", "personal_settings"
+                "sidebar_management_settings", "linkage_settings"
             )
         )
-        self.personal_settings_comboBox.setCurrentIndex(
-            readme_settings_async("sidebar_management_settings", "personal_settings")
+        self.course_settings_comboBox.setCurrentIndex(
+            readme_settings_async("sidebar_management_settings", "linkage_settings")
         )
-        self.personal_settings_comboBox.currentIndexChanged.connect(
+        self.course_settings_comboBox.currentIndexChanged.connect(
             lambda: update_settings(
                 "sidebar_management_settings",
-                "personal_settings",
-                self.personal_settings_comboBox.currentIndex(),
+                "linkage_settings",
+                self.course_settings_comboBox.currentIndex(),
             )
         )
 
@@ -490,12 +490,12 @@ class sidebar_management_settings(GroupHeaderCardWidget):
             self.security_settings_comboBox,
         )
         self.addGroup(
-            get_theme_icon("ic_fluent_person_edit_20_filled"),
-            get_content_name_async("sidebar_management_settings", "personal_settings"),
+            get_theme_icon("ic_fluent_calendar_ltr_20_filled"),
+            get_content_name_async("sidebar_management_settings", "linkage_settings"),
             get_content_description_async(
-                "sidebar_management_settings", "personal_settings"
+                "sidebar_management_settings", "linkage_settings"
             ),
-            self.personal_settings_comboBox,
+            self.course_settings_comboBox,
         )
         self.addGroup(
             get_theme_icon("ic_fluent_person_voice_20_filled"),

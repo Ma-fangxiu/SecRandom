@@ -27,7 +27,7 @@ def _get_break_assignment_class_info() -> Dict:
               如果无法获取课程信息，返回空字典
     """
     try:
-        data_source = readme_settings_async("course_settings", "data_source")
+        data_source = readme_settings_async("linkage_settings", "data_source")
 
         if data_source == 2:
             logger.debug("尝试从 ClassIsland 获取课间归属课程信息")
@@ -80,18 +80,18 @@ def _is_non_class_time() -> bool:
     """
     try:
         instant_draw_disable = readme_settings_async(
-            "course_settings", "instant_draw_disable"
+            "linkage_settings", "instant_draw_disable"
         )
         logger.debug(f"课间禁用开关是否启用: {instant_draw_disable}")
         if not instant_draw_disable:
             return False
 
         pre_class_enable_time = readme_settings_async(
-            "course_settings", "pre_class_enable_time"
+            "linkage_settings", "pre_class_enable_time"
         )
         logger.debug(f"上课前提前解禁时间: {pre_class_enable_time}秒")
 
-        data_source = readme_settings_async("course_settings", "data_source")
+        data_source = readme_settings_async("linkage_settings", "data_source")
         logger.debug(f"数据源选择: {data_source}")
 
         if data_source == 0:
@@ -286,7 +286,7 @@ def _get_current_class_info() -> Dict:
               如果当前时间不在任何上课时间段内，返回空字典
     """
     try:
-        data_source = readme_settings_async("course_settings", "data_source")
+        data_source = readme_settings_async("linkage_settings", "data_source")
 
         if data_source == 2:
             logger.debug("尝试从 ClassIsland 获取当前课程信息")
@@ -359,7 +359,9 @@ def _get_seconds_to_next_class() -> int:
                 start_total_seconds = _parse_time_string_to_seconds(start_time_str)
                 time_ranges.append((start_total_seconds, range_name))
             except Exception as e:
-                logger.exception(f"解析时间段失败: {range_name} = {time_range}, 错误: {e}")
+                logger.exception(
+                    f"解析时间段失败: {range_name} = {time_range}, 错误: {e}"
+                )
                 continue
 
         # 按开始时间排序
@@ -438,13 +440,13 @@ def import_cses_schedule(file_path: str) -> Tuple[bool, str]:
 
         if not parser.load_from_file(file_path):
             return False, get_content_name_async(
-                "course_settings", "cses_file_format_error"
+                "linkage_settings", "cses_file_format_error"
             )
 
         non_class_times = parser.get_non_class_times()
         if not non_class_times:
             return False, get_content_name_async(
-                "course_settings", "no_valid_time_periods"
+                "linkage_settings", "no_valid_time_periods"
             )
 
         original_file_name = Path(file_path).name
@@ -456,7 +458,9 @@ def import_cses_schedule(file_path: str) -> Tuple[bool, str]:
         logger.info(f"已将CSES文件保存到: {cses_data_path}")
 
         summary = parser.get_summary()
-        import_success_msg = get_content_name_async("course_settings", "import_success")
+        import_success_msg = get_content_name_async(
+            "linkage_settings", "import_success"
+        )
         if "{}" in import_success_msg:
             return True, import_success_msg.format(summary)
         else:
@@ -464,9 +468,9 @@ def import_cses_schedule(file_path: str) -> Tuple[bool, str]:
 
     except Exception as e:
         logger.exception(f"导入CSES文件失败: {e}")
-        return False, get_content_name_async("course_settings", "import_failed").format(
-            str(e)
-        )
+        return False, get_content_name_async(
+            "linkage_settings", "import_failed"
+        ).format(str(e))
 
 
 def import_cses_schedule_from_content(content: str) -> Tuple[bool, str]:
@@ -483,25 +487,25 @@ def import_cses_schedule_from_content(content: str) -> Tuple[bool, str]:
 
         if not parser.load_from_content(content):
             return False, get_content_name_async(
-                "course_settings", "cses_content_format_error"
+                "linkage_settings", "cses_content_format_error"
             )
 
         non_class_times = parser.get_non_class_times()
         if not non_class_times:
             return False, get_content_name_async(
-                "course_settings", "no_valid_time_periods"
+                "linkage_settings", "no_valid_time_periods"
             )
 
         summary = parser.get_summary()
-        return True, get_content_name_async("course_settings", "import_success").format(
-            summary
-        )
+        return True, get_content_name_async(
+            "linkage_settings", "import_success"
+        ).format(summary)
 
     except Exception as e:
         logger.exception(f"导入CSES内容失败: {e}")
-        return False, get_content_name_async("course_settings", "import_failed").format(
-            str(e)
-        )
+        return False, get_content_name_async(
+            "linkage_settings", "import_failed"
+        ).format(str(e))
 
 
 __all__ = ["import_cses_schedule", "import_cses_schedule_from_content"]

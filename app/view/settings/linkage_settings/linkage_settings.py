@@ -23,9 +23,9 @@ from app.common.extraction.cses_parser import CSESParser
 
 
 # ==================================================
-# 课程相关
+# 联动设置
 # ==================================================
-class course_settings(QWidget):
+class linkage_settings(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # 创建垂直布局
@@ -58,20 +58,20 @@ class data_source_settings(GroupHeaderCardWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle(
-            get_content_name_async("course_settings", "data_source_settings", "name")
+            get_content_name_async("linkage_settings", "data_source_settings", "name")
         )
         self.setBorderRadius(8)
 
         # 数据源选择下拉框
         self.data_source_combo = ComboBox()
         self.data_source_combo.addItems(
-            get_content_combo_name_async("course_settings", "data_source_function")
+            get_content_combo_name_async("linkage_settings", "data_source_function")
         )
-        data_source = readme_settings_async("course_settings", "data_source")
+        data_source = readme_settings_async("linkage_settings", "data_source")
         self.data_source_combo.setCurrentIndex(data_source)
         self.data_source_combo.currentIndexChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "data_source",
                 self.data_source_combo.currentIndex(),
             )
@@ -80,8 +80,8 @@ class data_source_settings(GroupHeaderCardWidget):
         # 添加设置项到分组
         self.addGroup(
             get_theme_icon("ic_fluent_database_20_filled"),
-            get_content_name_async("course_settings", "data_source_function"),
-            get_content_description_async("course_settings", "data_source_function"),
+            get_content_name_async("linkage_settings", "data_source_function"),
+            get_content_description_async("linkage_settings", "data_source_function"),
             self.data_source_combo,
         )
 
@@ -90,13 +90,13 @@ class cses_import_settings(GroupHeaderCardWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle(
-            get_content_name_async("course_settings", "cses_import_settings", "name")
+            get_content_name_async("linkage_settings", "cses_import_settings", "name")
         )
         self.setBorderRadius(8)
 
         # 导入文件按钮
         self.import_file_button = PushButton(
-            get_content_name_async("course_settings", "import_from_file")
+            get_content_name_async("linkage_settings", "import_from_file")
         )
         self.import_file_button.setIcon(
             get_theme_icon("ic_fluent_folder_open_20_filled")
@@ -105,7 +105,7 @@ class cses_import_settings(GroupHeaderCardWidget):
 
         # 查看当前配置按钮
         self.view_current_config_button = PushButton(
-            get_content_name_async("course_settings", "view_current_config")
+            get_content_name_async("linkage_settings", "view_current_config")
         )
         self.view_current_config_button.setIcon(
             get_theme_icon("ic_fluent_document_20_filled")
@@ -116,7 +116,7 @@ class cses_import_settings(GroupHeaderCardWidget):
 
         # 当前课程表信息标签
         self.schedule_info_label = BodyLabel(
-            get_content_name_async("course_settings", "no_schedule_imported")
+            get_content_name_async("linkage_settings", "no_schedule_imported")
         )
         self._update_schedule_info()
 
@@ -138,8 +138,8 @@ class cses_import_settings(GroupHeaderCardWidget):
         # 添加设置项到分组
         self.addGroup(
             get_theme_icon("ic_fluent_calendar_ltr_20_filled"),
-            get_content_name_async("course_settings", "cses_import", "name"),
-            get_content_name_async("course_settings", "cses_import", "description"),
+            get_content_name_async("linkage_settings", "cses_import", "name"),
+            get_content_name_async("linkage_settings", "cses_import", "description"),
             info_widget,
         )
 
@@ -173,12 +173,12 @@ class cses_import_settings(GroupHeaderCardWidget):
 
                 self.schedule_info_label.setText(
                     get_content_name_async(
-                        "course_settings", "schedule_imported"
+                        "linkage_settings", "schedule_imported"
                     ).format(count)
                 )
             else:
                 self.schedule_info_label.setText(
-                    get_content_name_async("course_settings", "no_schedule_imported")
+                    get_content_name_async("linkage_settings", "no_schedule_imported")
                 )
 
         except Exception as e:
@@ -190,9 +190,9 @@ class cses_import_settings(GroupHeaderCardWidget):
         # 打开文件选择对话框
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            get_content_name_async("course_settings", "select_cses_file"),
+            get_content_name_async("linkage_settings", "select_cses_file"),
             "",
-            f"{get_content_name_async('course_settings', 'yaml_files')};;{get_content_name_async('course_settings', 'all_files')}",
+            f"{get_content_name_async('linkage_settings', 'yaml_files')};;{get_content_name_async('linkage_settings', 'all_files')}",
         )
 
         if file_path:
@@ -204,7 +204,7 @@ class cses_import_settings(GroupHeaderCardWidget):
             # 显示等待对话框
             self.import_file_button.setEnabled(False)
             self.import_file_button.setText(
-                get_content_name_async("course_settings", "importing")
+                get_content_name_async("linkage_settings", "importing")
             )
 
             # 调用导入函数
@@ -213,7 +213,7 @@ class cses_import_settings(GroupHeaderCardWidget):
             if success:
                 # 显示成功信息
                 InfoBar.success(
-                    title=get_content_name_async("course_settings", "import_success"),
+                    title=get_content_name_async("linkage_settings", "import_success"),
                     content=message,
                     orient=Qt.Horizontal,
                     isClosable=True,
@@ -228,7 +228,7 @@ class cses_import_settings(GroupHeaderCardWidget):
             else:
                 # 显示错误信息
                 InfoBar.error(
-                    title=get_content_name_async("course_settings", "import_failed"),
+                    title=get_content_name_async("linkage_settings", "import_failed"),
                     content=message,
                     orient=Qt.Horizontal,
                     isClosable=True,
@@ -239,13 +239,15 @@ class cses_import_settings(GroupHeaderCardWidget):
 
         except Exception as e:
             logger.exception(f"导入CSES文件失败: {e}")
-            import_error_msg = get_content_name_async("course_settings", "import_error")
+            import_error_msg = get_content_name_async(
+                "linkage_settings", "import_error"
+            )
             if "{}" in import_error_msg:
                 error_content = import_error_msg.format(str(e))
             else:
                 error_content = import_error_msg
             import_failed_title = get_content_name_async(
-                "course_settings", "import_failed"
+                "linkage_settings", "import_failed"
             )
             # 确保标题不包含意外的格式化占位符
             if "{}" in import_failed_title:
@@ -264,7 +266,7 @@ class cses_import_settings(GroupHeaderCardWidget):
             # 恢复按钮状态
             self.import_file_button.setEnabled(True)
             self.import_file_button.setText(
-                get_content_name_async("course_settings", "import_from_file")
+                get_content_name_async("linkage_settings", "import_from_file")
             )
 
     def on_view_current_config_clicked(self):
@@ -276,7 +278,7 @@ class cses_import_settings(GroupHeaderCardWidget):
         except Exception as e:
             logger.exception(f"显示当前配置失败: {e}")
             InfoBar.error(
-                title=get_content_name_async("course_settings", "import_failed"),
+                title=get_content_name_async("linkage_settings", "import_failed"),
                 content=f"无法显示当前配置: {str(e)}",
                 orient=Qt.Horizontal,
                 isClosable=True,
@@ -290,25 +292,25 @@ class class_break_settings(GroupHeaderCardWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle(
-            get_content_name_async("course_settings", "class_break_settings", "name")
+            get_content_name_async("linkage_settings", "class_break_settings", "name")
         )
         self.setBorderRadius(8)
 
         # 课间禁用开关
         self.class_break_switch = SwitchButton()
         self.class_break_switch.setOffText(
-            get_content_name_async("course_settings", "disable")
+            get_content_name_async("linkage_settings", "disable")
         )
         self.class_break_switch.setOnText(
-            get_content_name_async("course_settings", "enable")
+            get_content_name_async("linkage_settings", "enable")
         )
         instant_draw_disable = readme_settings_async(
-            "course_settings", "instant_draw_disable"
+            "linkage_settings", "instant_draw_disable"
         )
         self.class_break_switch.setChecked(instant_draw_disable)
         self.class_break_switch.checkedChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "instant_draw_disable",
                 self.class_break_switch.isChecked(),
             )
@@ -317,18 +319,18 @@ class class_break_settings(GroupHeaderCardWidget):
         # 验证流程开关
         self.verification_switch = SwitchButton()
         self.verification_switch.setOffText(
-            get_content_name_async("course_settings", "disable")
+            get_content_name_async("linkage_settings", "disable")
         )
         self.verification_switch.setOnText(
-            get_content_name_async("course_settings", "enable")
+            get_content_name_async("linkage_settings", "enable")
         )
         verification_required = readme_settings_async(
-            "course_settings", "verification_required"
+            "linkage_settings", "verification_required"
         )
         self.verification_switch.setChecked(verification_required)
         self.verification_switch.checkedChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "verification_required",
                 self.verification_switch.isChecked(),
             )
@@ -341,12 +343,12 @@ class class_break_settings(GroupHeaderCardWidget):
         self.pre_class_enable_spinbox.setSingleStep(1)
         self.pre_class_enable_spinbox.setSuffix(" s")
         pre_class_enable_time = readme_settings_async(
-            "course_settings", "pre_class_enable_time"
+            "linkage_settings", "pre_class_enable_time"
         )
         self.pre_class_enable_spinbox.setValue(pre_class_enable_time)
         self.pre_class_enable_spinbox.valueChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "pre_class_enable_time",
                 self.pre_class_enable_spinbox.value(),
             )
@@ -355,20 +357,20 @@ class class_break_settings(GroupHeaderCardWidget):
         # 添加设置项到分组
         self.addGroup(
             get_theme_icon("ic_fluent_clock_lock_20_filled"),
-            get_content_name_async("course_settings", "class_break_function"),
-            get_content_description_async("course_settings", "class_break_function"),
+            get_content_name_async("linkage_settings", "class_break_function"),
+            get_content_description_async("linkage_settings", "class_break_function"),
             self.class_break_switch,
         )
         self.addGroup(
             get_theme_icon("ic_fluent_shield_lock_20_filled"),
-            get_content_name_async("course_settings", "verification_function"),
-            get_content_description_async("course_settings", "verification_function"),
+            get_content_name_async("linkage_settings", "verification_function"),
+            get_content_description_async("linkage_settings", "verification_function"),
             self.verification_switch,
         )
         self.addGroup(
             get_theme_icon("ic_fluent_timer_20_filled"),
-            get_content_name_async("course_settings", "pre_class_enable_time"),
-            get_content_description_async("course_settings", "pre_class_enable_time"),
+            get_content_name_async("linkage_settings", "pre_class_enable_time"),
+            get_content_description_async("linkage_settings", "pre_class_enable_time"),
             self.pre_class_enable_spinbox,
         )
 
@@ -378,7 +380,7 @@ class pre_class_reset_settings(GroupHeaderCardWidget):
         super().__init__(parent)
         self.setTitle(
             get_content_name_async(
-                "course_settings", "pre_class_reset_settings", "name"
+                "linkage_settings", "pre_class_reset_settings", "name"
             )
         )
         self.setBorderRadius(8)
@@ -386,18 +388,18 @@ class pre_class_reset_settings(GroupHeaderCardWidget):
         # 课前重置开关
         self.pre_class_reset_switch = SwitchButton()
         self.pre_class_reset_switch.setOffText(
-            get_content_name_async("course_settings", "disable")
+            get_content_name_async("linkage_settings", "disable")
         )
         self.pre_class_reset_switch.setOnText(
-            get_content_name_async("course_settings", "enable")
+            get_content_name_async("linkage_settings", "enable")
         )
         pre_class_reset_enabled = readme_settings_async(
-            "course_settings", "pre_class_reset_enabled"
+            "linkage_settings", "pre_class_reset_enabled"
         )
         self.pre_class_reset_switch.setChecked(pre_class_reset_enabled)
         self.pre_class_reset_switch.checkedChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "pre_class_reset_enabled",
                 self.pre_class_reset_switch.isChecked(),
             )
@@ -410,12 +412,12 @@ class pre_class_reset_settings(GroupHeaderCardWidget):
         self.pre_class_reset_spinbox.setSingleStep(1)
         self.pre_class_reset_spinbox.setSuffix(" s")
         pre_class_reset_time = readme_settings_async(
-            "course_settings", "pre_class_reset_time"
+            "linkage_settings", "pre_class_reset_time"
         )
         self.pre_class_reset_spinbox.setValue(pre_class_reset_time)
         self.pre_class_reset_spinbox.valueChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "pre_class_reset_time",
                 self.pre_class_reset_spinbox.value(),
             )
@@ -424,16 +426,16 @@ class pre_class_reset_settings(GroupHeaderCardWidget):
         # 添加设置项到分组
         self.addGroup(
             get_theme_icon("ic_fluent_timer_20_filled"),
-            get_content_name_async("course_settings", "pre_class_reset_function"),
+            get_content_name_async("linkage_settings", "pre_class_reset_function"),
             get_content_description_async(
-                "course_settings", "pre_class_reset_function"
+                "linkage_settings", "pre_class_reset_function"
             ),
             self.pre_class_reset_switch,
         )
         self.addGroup(
             get_theme_icon("ic_fluent_clock_20_filled"),
-            get_content_name_async("course_settings", "pre_class_reset_time"),
-            get_content_description_async("course_settings", "pre_class_reset_time"),
+            get_content_name_async("linkage_settings", "pre_class_reset_time"),
+            get_content_description_async("linkage_settings", "pre_class_reset_time"),
             self.pre_class_reset_spinbox,
         )
 
@@ -443,7 +445,7 @@ class subject_history_filter_settings(GroupHeaderCardWidget):
         super().__init__(parent)
         self.setTitle(
             get_content_name_async(
-                "course_settings", "subject_history_filter_settings", "name"
+                "linkage_settings", "subject_history_filter_settings", "name"
             )
         )
         self.setBorderRadius(8)
@@ -451,18 +453,18 @@ class subject_history_filter_settings(GroupHeaderCardWidget):
         # 科目历史记录过滤开关
         self.subject_history_filter_switch = SwitchButton()
         self.subject_history_filter_switch.setOffText(
-            get_content_name_async("course_settings", "disable")
+            get_content_name_async("linkage_settings", "disable")
         )
         self.subject_history_filter_switch.setOnText(
-            get_content_name_async("course_settings", "enable")
+            get_content_name_async("linkage_settings", "enable")
         )
         subject_history_filter_enabled = readme_settings_async(
-            "course_settings", "subject_history_filter_enabled"
+            "linkage_settings", "subject_history_filter_enabled"
         )
         self.subject_history_filter_switch.setChecked(subject_history_filter_enabled)
         self.subject_history_filter_switch.checkedChanged.connect(
             lambda: update_settings(
-                "course_settings",
+                "linkage_settings",
                 "subject_history_filter_enabled",
                 self.subject_history_filter_switch.isChecked(),
             )
@@ -472,10 +474,10 @@ class subject_history_filter_settings(GroupHeaderCardWidget):
         self.addGroup(
             get_theme_icon("ic_fluent_filter_20_filled"),
             get_content_name_async(
-                "course_settings", "subject_history_filter_function"
+                "linkage_settings", "subject_history_filter_function"
             ),
             get_content_description_async(
-                "course_settings", "subject_history_filter_function"
+                "linkage_settings", "subject_history_filter_function"
             ),
             self.subject_history_filter_switch,
         )
