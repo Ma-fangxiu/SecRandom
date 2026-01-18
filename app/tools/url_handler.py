@@ -3,11 +3,15 @@ URL处理工具 - 处理应用启动时的URL参数
 """
 
 import argparse
+import json
+import threading
 from loguru import logger
 from typing import Optional, Dict, Any
+from multiprocessing.connection import Client
 from PySide6.QtCore import QObject, Signal
 from app.common.IPC_URL import URLIPCHandler
 from app.common.IPC_URL.url_command_handler import URLCommandHandler
+from app.tools.settings_access import get_settings_signals
 
 
 class URLHandler(QObject):
@@ -31,6 +35,7 @@ class URLHandler(QObject):
         self.protocol_name = protocol_name
         self.url_ipc_handler = URLIPCHandler(app_name, protocol_name)
         self.command_handler = URLCommandHandler()
+        self._ipc_listener_connected = False
 
         # 连接信号
         self.command_handler.showSettingsRequested.connect(
@@ -42,6 +47,102 @@ class URLHandler(QObject):
         self.command_handler.showTrayActionRequested.connect(
             self.showTrayActionRequested.emit
         )
+        self._setup_ipc_setting_listener()
+
+    def _setup_ipc_setting_listener(self) -> None:
+        if self._ipc_listener_connected:
+            return
+        try:
+            get_settings_signals().settingChanged.connect(self._on_setting_changed)
+            self._ipc_listener_connected = True
+        except Exception as e:
+            logger.exception(f"连接设置变更监听失败: {e}")
+
+    def _on_setting_changed(self, first_level_key: str, second_level_key: str, value):
+        if first_level_key != "basic_settings" or second_level_key != "url_protocol":
+            return
+        try:
+            desired = bool(value)
+            if desired:
+                logger.debug("URL协议开关已开启，准备注册URL协议并启动IPC服务器")
+                logger.debug(
+                    f"URL协议当前注册状态: {self.url_ipc_handler.is_protocol_registered()}"
+                )
+
+                if self._start_ipc_server_if_allowed():
+                    logger.debug("IPC服务器已启用")
+                else:
+                    logger.warning("IPC服务器未启用")
+            else:
+                logger.debug("URL协议开关已关闭，准备停止IPC服务器并注销URL协议")
+                self._stop_ipc_server()
+                logger.debug("IPC服务器已停止")
+                logger.debug(
+                    f"URL协议当前注册状态: {self.url_ipc_handler.is_protocol_registered()}"
+                )
+        except Exception as e:
+            logger.exception(f"处理URL协议设置变更失败: {e}")
+
+    def _probe_existing_ipc_server(self, timeout: float = 0.5) -> bool:
+        result = {"ok": False}
+
+        def _worker():
+            try:
+                address, family = self.url_ipc_handler._get_ipc_address_for_name(
+                    self.url_ipc_handler.ipc_name
+                )
+                authkey = self.url_ipc_handler._get_authkey(
+                    self.url_ipc_handler.ipc_name
+                )
+
+                conn = Client(address=address, family=family, authkey=authkey)
+                conn.send_bytes(
+                    json.dumps(
+                        {"type": "ping", "payload": {}}, ensure_ascii=False
+                    ).encode("utf-8")
+                )
+                response_data = conn.recv_bytes()
+                conn.close()
+
+                if not response_data:
+                    return
+
+                response = json.loads(response_data.decode("utf-8"))
+                if (
+                    isinstance(response, dict)
+                    and response.get("success") is True
+                    and response.get("type") == "ping"
+                    and response.get("result") == "pong"
+                ):
+                    result["ok"] = True
+            except Exception:
+                return
+
+        t = threading.Thread(target=_worker, daemon=True)
+        t.start()
+        t.join(timeout=max(0.0, float(timeout)))
+        return bool(result["ok"])
+
+    def _start_ipc_server_if_allowed(self) -> bool:
+        if not self.url_ipc_handler.is_protocol_registered():
+            logger.debug("URL协议未注册，跳过IPC服务器启动")
+            return False
+
+        if self.url_ipc_handler.start_ipc_server():
+            self.url_ipc_handler.register_message_handler(
+                "url", self._handle_ipc_url_message
+            )
+            return True
+        if self._probe_existing_ipc_server():
+            logger.debug("检测到IPC服务器已存在，跳过启动")
+            return True
+        return False
+
+    def _stop_ipc_server(self) -> None:
+        try:
+            self.url_ipc_handler.stop_ipc_server()
+        except Exception as e:
+            logger.exception(f"停止IPC服务器失败: {e}")
 
     def parse_command_line_args(self) -> Optional[Dict[str, Any]]:
         """
@@ -149,14 +250,11 @@ class URLHandler(QObject):
         Returns:
             如果是第一个实例返回True，否则返回False
         """
-        if self.url_ipc_handler.start_ipc_server():
-            # 注册消息处理器
-            self.url_ipc_handler.register_message_handler(
-                "url", self._handle_ipc_url_message
-            )
+        if not self.url_ipc_handler.is_protocol_registered():
+            logger.debug("URL协议未注册，跳过单实例IPC监听")
             return True
-        else:
-            return False
+
+        return self._start_ipc_server_if_allowed()
 
     def _handle_ipc_url_message(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -120,7 +120,11 @@ class URLIPCHandler:
         except Exception as e:
             self.is_running = False
             self._listener = None
-            logger.exception(f"启动IPC服务器失败: {e}")
+            winerror = getattr(e, "winerror", None)
+            if os.name == "nt" and winerror in (5, 183):
+                logger.warning(f"启动IPC服务器失败: {e}")
+            else:
+                logger.exception(f"启动IPC服务器失败: {e}")
             return False
 
     def stop_ipc_server(self):
@@ -190,6 +194,9 @@ class URLIPCHandler:
         payload = message.get("payload", {})
 
         logger.debug(f"收到消息 - 类型: {message_type}, 负载: {payload}")
+
+        if message_type == "ping":
+            return {"success": True, "type": "ping", "result": "pong"}
 
         if message_type in self.message_handlers:
             try:

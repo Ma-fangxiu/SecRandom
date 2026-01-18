@@ -38,8 +38,8 @@ basic_settings = {
             "switchbutton_name": {"enable": "", "disable": ""},
         },
         "url_protocol": {
-            "name": "URL协议注册",
-            "description": "注册自定义URL协议(secrandom://)，支持通过链接启动应用",
+            "name": "URL协议注册&IPC服务",
+            "description": "注册自定义URL协议(secrandom://)，并启用IPC通信，支持链接启动与外部联动",
             "switchbutton_name": {"enable": "", "disable": ""},
         },
         "autostart_notification": {
@@ -56,11 +56,11 @@ basic_settings = {
             "disable": "已关闭自动保存窗口大小",
         },
         "url_protocol_notification": {
-            "enable": "已开启URL协议注册",
-            "disable": "已关闭URL协议注册",
-            "register_failure": "URL协议注册失败",
-            "unregister_failure": "URL协议注销失败",
-            "error": "URL协议设置错误: {error}",
+            "enable": "已开启URL协议注册与IPC服务",
+            "disable": "已关闭URL协议注册与IPC服务",
+            "register_failure": "URL协议&IPC服务注册失败",
+            "unregister_failure": "URL协议&IPC服务注销失败",
+            "error": "URL协议&IPC服务设置错误: {error}",
         },
         "export_diagnostic_data": {
             "name": "导出诊断数据",
@@ -158,6 +158,11 @@ basic_settings = {
             "description": "使用选中的备份文件还原数据",
             "pushbutton_name": "还原",
         },
+        "backup_restore_delete": {
+            "name": "删除备份",
+            "description": "删除选中的备份文件",
+            "pushbutton_name": "删除",
+        },
         "backup_restore_no_selection": {
             "text": "请先选择要还原的备份文件",
         },
@@ -165,51 +170,65 @@ basic_settings = {
             "title": "确认还原",
             "content": "确定要还原该备份文件吗？\n\n{file}\n\n此操作会覆盖当前数据，还原完成后需要重启应用程序以生效。",
         },
+        "backup_restore_delete_confirm": {
+            "title": "确认删除",
+            "content": "确定要删除该备份文件吗？\n\n{file}\n\n此操作不可恢复。",
+            "pushbutton_name": "删除",
+        },
+        "backup_restore_delete_cancel": {
+            "name": "取消",
+            "description": "取消删除操作",
+            "pushbutton_name": "取消",
+        },
         "backup_restore_refresh_result": {
             "success": "已刷新，共 {count} 个备份文件",
             "empty": "已刷新，未发现备份文件",
             "failure": "刷新失败：{error}",
         },
-        "backup_restore_table_headers": ["备份文件", "创建时间", "大小"],
+        "backup_restore_delete_result": {
+            "success": "已删除：{file}",
+            "failure": "删除失败：{error}",
+        },
+        "backup_restore_table_headers": ["备份文件", "创建时间", "大小", "操作"],
         "include_config": {
             "name": "配置文件",
             "description": "软件设置与配置文件（config）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_list": {
             "name": "名单数据",
             "description": "点名/抽奖名单等数据（list）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_language": {
             "name": "语言文件",
             "description": "多语言文本配置（Language）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_history": {
             "name": "历史记录",
             "description": "抽取历史记录数据（history）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_audio": {
             "name": "音频资源",
             "description": "音频资源文件（audio）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_cses": {
             "name": "CSES 联动",
             "description": "CSES 相关联动数据（CSES）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_images": {
             "name": "图片资源",
             "description": "学生/奖品图片资源（images）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "include_logs": {
             "name": "运行日志",
             "description": "程序运行日志，可能包含敏感信息（logs）",
-            "switchbutton_name": {"enable": "包含", "disable": "不包含"},
+            "switchbutton_name": {"enable": "", "disable": ""},
         },
         "backup_tabs": {
             "auto": "自动备份",
@@ -465,6 +484,11 @@ basic_settings = {
             "description": "Restore data from the selected backup file",
             "pushbutton_name": "Restore",
         },
+        "backup_restore_delete": {
+            "name": "Delete backup",
+            "description": "Delete the selected backup file",
+            "pushbutton_name": "Delete",
+        },
         "backup_restore_no_selection": {
             "text": "Please select a backup file to restore first",
         },
@@ -472,12 +496,20 @@ basic_settings = {
             "title": "Confirm restore",
             "content": "Are you sure you want to restore this backup file?\n\n{file}\n\nThis will overwrite current data. Restart the app for changes to take effect.",
         },
+        "backup_restore_delete_confirm": {
+            "title": "Confirm delete",
+            "content": "Are you sure you want to delete this backup file?\n\n{file}\n\nThis action cannot be undone.",
+        },
         "backup_restore_refresh_result": {
             "success": "Refreshed. {count} backup file(s) found",
             "empty": "Refreshed. No backup files found",
             "failure": "Refresh failed: {error}",
         },
-        "backup_restore_table_headers": ["Backup file", "Created at", "Size"],
+        "backup_restore_delete_result": {
+            "success": "Deleted: {file}",
+            "failure": "Delete failed: {error}",
+        },
+        "backup_restore_table_headers": ["Backup file", "Created at", "Size", "Action"],
         "include_config": {
             "name": "Config",
             "description": "App settings and configuration files (config)",
@@ -583,16 +615,16 @@ basic_settings = {
             "switchbutton_name": {"enable": "", "disable": ""},
         },
         "url_protocol": {
-            "name": "URL protocol register",
-            "description": "Sign up for custom URL protocol (secrandom://), support to launch app via link",
+            "name": "URL protocol & IPC service",
+            "description": "Register custom URL protocol (secrandom://) and enable IPC, supporting launching via link and external integrations",
             "switchbutton_name": {"enable": "", "disable": ""},
         },
         "url_protocol_notification": {
-            "enable": "URL protocol registration enabled",
-            "disable": "URL protocol registration disabled",
-            "register_failure": "Failed to register URL protocol",
-            "unregister_failure": "Failed to unregister URL protocol",
-            "error": "URL protocol setting error: {error}",
+            "enable": "URL protocol & IPC service enabled",
+            "disable": "URL protocol & IPC service disabled",
+            "register_failure": "Failed to register URL protocol & IPC service",
+            "unregister_failure": "Failed to unregister URL protocol & IPC service",
+            "error": "URL protocol & IPC service setting error: {error}",
         },
         "settings_import_export": {
             "export_success_title": {"name": "Export settings"},

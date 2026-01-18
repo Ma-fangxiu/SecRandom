@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from datetime import datetime
 
 from loguru import logger
@@ -291,16 +292,19 @@ class BackupManagerWindow(QWidget):
         headers = get_any_position_value_async(
             "basic_settings", "backup_restore_table_headers"
         )
-        if isinstance(headers, list) and len(headers) >= 3:
-            self.restore_table.setColumnCount(3)
-            self.restore_table.setHorizontalHeaderLabels(headers[:3])
+        if isinstance(headers, list) and len(headers) >= 4:
+            self.restore_table.setColumnCount(4)
+            self.restore_table.setHorizontalHeaderLabels(headers[:4])
         else:
-            self.restore_table.setColumnCount(3)
-            self.restore_table.setHorizontalHeaderLabels(["File", "Time", "Size"])
+            self.restore_table.setColumnCount(4)
+            self.restore_table.setHorizontalHeaderLabels(["File", "Time", "Size", ""])
         for i in range(self.restore_table.columnCount()):
-            self.restore_table.horizontalHeader().setSectionResizeMode(
-                i, QHeaderView.ResizeMode.Stretch
+            mode = (
+                QHeaderView.ResizeMode.ResizeToContents
+                if i == self.restore_table.columnCount() - 1
+                else QHeaderView.ResizeMode.Stretch
             )
+            self.restore_table.horizontalHeader().setSectionResizeMode(i, mode)
             self.restore_table.horizontalHeader().setDefaultAlignment(
                 Qt.AlignmentFlag.AlignCenter
             )
@@ -418,9 +422,86 @@ class BackupManagerWindow(QWidget):
             self.restore_table.setItem(row, 0, name_item)
             self.restore_table.setItem(row, 1, time_item)
             self.restore_table.setItem(row, 2, size_item)
+            delete_button = PushButton(
+                get_content_pushbutton_name_async(
+                    "basic_settings", "backup_restore_delete"
+                )
+            )
+            delete_button.clicked.connect(
+                lambda _checked=False, fp=str(p): self._on_restore_delete_clicked(fp)
+            )
+            self.restore_table.setCellWidget(row, 3, delete_button)
 
         if files:
             self.restore_table.selectRow(0)
+
+    def _on_restore_delete_clicked(self, file_path: str):
+        if not file_path:
+            return
+
+        dialog = MessageBox(
+            get_any_position_value_async(
+                "basic_settings", "backup_restore_delete_confirm", "title"
+            ),
+            get_any_position_value_async(
+                "basic_settings", "backup_restore_delete_confirm", "content"
+            ).format(file=os.path.basename(file_path)),
+            self.window(),
+        )
+        dialog.yesButton.setText(
+            get_content_pushbutton_name_async("basic_settings", "backup_restore_delete")
+        )
+        dialog.cancelButton.setText(
+            get_content_pushbutton_name_async(
+                "basic_settings", "backup_restore_delete_cancel"
+            )
+        )
+        if not dialog.exec():
+            return
+
+        try:
+            backup_dir = get_backup_dir().resolve()
+            p = Path(file_path)
+            try:
+                resolved = p.resolve()
+            except Exception:
+                resolved = p
+
+            if backup_dir not in resolved.parents:
+                raise ValueError("不允许删除备份目录以外的文件")
+
+            if resolved.suffix.lower() != ".zip":
+                raise ValueError("不支持的备份文件类型")
+
+            resolved.unlink(missing_ok=True)
+            show_notification(
+                NotificationType.SUCCESS,
+                NotificationConfig(
+                    title=get_content_name_async(
+                        "basic_settings", "backup_restore_delete"
+                    ),
+                    content=get_any_position_value_async(
+                        "basic_settings", "backup_restore_delete_result", "success"
+                    ).format(file=resolved.name),
+                ),
+                parent=self.window(),
+            )
+        except Exception as e:
+            logger.exception(f"删除备份文件失败: {e}")
+            show_notification(
+                NotificationType.ERROR,
+                NotificationConfig(
+                    title=get_content_name_async(
+                        "basic_settings", "backup_restore_delete"
+                    ),
+                    content=get_any_position_value_async(
+                        "basic_settings", "backup_restore_delete_result", "failure"
+                    ).format(error=str(e)),
+                ),
+                parent=self.window(),
+            )
+        finally:
+            self._refresh_restore_files()
 
     def _on_restore_refresh_clicked(self):
         try:
