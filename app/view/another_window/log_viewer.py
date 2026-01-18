@@ -21,6 +21,7 @@ class LogViewerWindow(QWidget):
         """初始化日志查看窗口"""
         super().__init__(parent)
         self.current_log_file = None
+        self.hidden_keywords = ("内幕", "behind")
         self.log_level_colors = {
             "DEBUG": "#999999",
             "INFO": "#0099CC",
@@ -216,6 +217,12 @@ class LogViewerWindow(QWidget):
                     return
                 with open(self.current_log_file, "r", encoding="utf-8") as f:
                     lines = f.readlines()
+
+            lines = [
+                line
+                for line in lines
+                if "内幕" not in line and "behind" not in line.lower()
+            ]
 
             # 获取选择的日志等级
             level_index = self.log_level_combo.currentIndex()
