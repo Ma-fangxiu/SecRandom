@@ -19,7 +19,7 @@ from app.view.settings.more_settings.music_settings import (
     music_management,
     music_settings_table,
 )
-from app.view.settings.linkage_settings.linkage_settings import (
+from app.view.settings.linkage_settings import (
     class_break_settings,
     cses_import_settings,
     data_source_settings,
