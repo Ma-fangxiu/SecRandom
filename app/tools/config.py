@@ -15,7 +15,6 @@ import psutil
 from PySide6.QtWidgets import QWidget, QFileDialog
 from PySide6.QtCore import Qt
 from qfluentwidgets import InfoBar, InfoBarPosition, FluentIcon, InfoBarIcon, MessageBox
-from app.common.safety.verify_ops import require_and_run
 
 if sys.platform.startswith("linux"):
     try:
@@ -1442,7 +1441,7 @@ def _request_import_overwrite_confirmation(
         if dialog.exec():
             on_confirm()
 
-    require_and_run("import_overwrite", parent, _apply)
+    _apply()
 
 
 def _request_import_version_mismatch_confirmation(
@@ -1482,7 +1481,7 @@ def _request_import_version_mismatch_confirmation(
         if warning_dialog.exec():
             on_confirm()
 
-    require_and_run("import_version_mismatch", parent, _apply)
+    _apply()
 
 
 def _perform_import_all_data_from_file(
@@ -1543,6 +1542,22 @@ def import_all_data(
             "",
             "ZIP Files (*.zip);;All Files (*)",
         )
+        if not file_path:
+            return False
+        _start_import_all_data_flow(file_path, parent, on_success)
+        return True
+    except Exception as e:
+        _show_import_all_data_failure(parent, e)
+        return False
+
+
+def import_all_data_from_file_path(
+    file_path: str,
+    parent: Optional[QWidget] = None,
+    on_success: Optional[Callable[[], None]] = None,
+) -> bool:
+    """从指定文件路径导入所有数据"""
+    try:
         if not file_path:
             return False
         _start_import_all_data_flow(file_path, parent, on_success)
