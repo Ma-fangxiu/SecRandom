@@ -319,8 +319,6 @@ def main():
 
     initialize_app_components(window_manager)
 
-    if VERSION == DEV_VERSION:
-
     try:
         exit_code = app.exec()
         handle_exit(
