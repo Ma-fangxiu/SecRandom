@@ -95,71 +95,6 @@ def initialize_sentry():
     sentry_sdk.set_user({"ip_address": "{{auto}}"})
 
 
-# ==================================================
-# 开发提示相关函数
-# ==================================================
-
-
-def add_dev_hint_to_window(window):
-    """为窗口添加开发中提示
-
-    Args:
-        window: 要添加提示的窗口对象
-    """
-    from app.view.components.dev_hint_widget import DevHintWidget
-
-    if not window.isWindow() or hasattr(window, "_dev_hint_added"):
-        return
-
-    dev_hint = DevHintWidget(window)
-    dev_hint.setParent(window)
-    dev_hint.show()
-
-    window._dev_hint_added = True
-
-    original_resize_event = window.resizeEvent
-
-    def new_resize_event(event, orig_event=original_resize_event, dh=dev_hint):
-        if orig_event:
-            orig_event(event)
-        dh.update_position()
-
-    window.resizeEvent = new_resize_event
-    dev_hint.update_position()
-
-
-def add_dev_hints_to_existing_windows():
-    """为所有现有窗口添加开发提示"""
-    for widget in QApplication.topLevelWidgets():
-        add_dev_hint_to_window(widget)
-
-
-def setup_dev_hints(app):
-    """设置开发提示功能
-
-    Args:
-        app: QApplication 实例
-    """
-    QTimer.singleShot(DEV_HINT_DELAY_MS, add_dev_hints_to_existing_windows)
-
-    original_notify = app.notify
-
-    def new_notify(receiver, event):
-        result = original_notify(receiver, event)
-
-        if (
-            hasattr(event, "type")
-            and event.type() == event.Type.Show
-            and hasattr(receiver, "isWindow")
-            and receiver.isWindow()
-            and not hasattr(receiver, "_dev_hint_added")
-        ):
-            add_dev_hint_to_window(receiver)
-
-        return result
-
-    app.notify = new_notify
-
 
 # ==================================================
 # 应用程序初始化相关函数
@@ -385,7 +320,6 @@ def main():
     initialize_app_components(window_manager)
 
     if VERSION == DEV_VERSION:
-        setup_dev_hints(app)
 
     try:
         exit_code = app.exec()
